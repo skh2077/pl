@@ -1,0 +1,36 @@
+mainprog test;
+int x;
+float y;
+
+function foo (int:a; int:b;) : int;
+    int x;
+    begin
+        x = 5
+    end
+
+procedure bar (float:c; float:d);
+    int x;
+    begin
+        c = 2.0
+    end
+
+begin
+    for foobar in barfoo:
+    begin
+        if x < 10:
+            begin
+                foo(1,20);
+                x = 11
+            end
+        elif x == 12:
+            begin
+                x = 13
+            end
+        else:
+            begin
+                x = 15;
+                y = 12
+            end
+    end;
+    print(x)
+end

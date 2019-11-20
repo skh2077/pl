@@ -1,0 +1,7 @@
+# flex/bison files
+*.tab.*
+lex.yy.c
+
+# Others
+*.zip
+.DS_store
