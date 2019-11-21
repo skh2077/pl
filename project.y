@@ -200,9 +200,10 @@ int main(int argc, char *argv[]){
 		fprintf(stderr, "파일이름을 입력해야 합니다.\n");
 		exit(1);
 	}else if ((yyin = fopen(argv[1], "r")) != NULL){
-		printf ("file opened\n");
+		printf ("파일열림\n");
 		yyparse();
 		fclose(yyin);
+		printf("프로그램 종료\n");
 	}else{
 		fprintf(stderr, "%s 파일을 찾을 수 없습니다.\n", argv[1]);
 		exit(1);
