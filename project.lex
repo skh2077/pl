@@ -7,7 +7,7 @@ DIGIT	[0-9]
 LETTER	[a-zA-Z]
 
 %%
-[\t ]+
+[\n\t ]+
 mainprog											{ return KW_MAIN;			}
 function											{ return KW_FUNC;			}
 procedure											{ return KW_PROC;			}
