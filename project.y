@@ -7,9 +7,6 @@
 	int yylex();
 	void yyerror (char const *);
 	FILE *yyin;
-	int symbols[52];
-	int symbolVal(char symbol);
-	void updateSymbolVal(char symbol, int val);
 %}
 
 %start program
