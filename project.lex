@@ -5,6 +5,7 @@ int line_num = 0;
 		
 %}
 
+%option yylineno
 %option noyywrap
 DIGIT	[0-9]
 LETTER	[a-zA-Z]
