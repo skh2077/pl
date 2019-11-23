@@ -2,11 +2,14 @@
 	#include <stdio.h>
 	#include <string.h>
 	#include <stdlib.h>
+	#include "symtab.h"
 	extern int yylineno;
-	void yyerror (char const *);
 	int yylex();
+	void yyerror (char const *);
 	FILE *yyin;
 %}
+
+%start program
 
 %union {
 	int ival;
@@ -27,7 +30,7 @@
 
 program:
 	%empty
-	| KW_MAIN ID DL_SMCOLON declarations subprogram_declarations compound_statement
+	| KW_MAIN ID DL_SMCOLON declarations subprogram_declarations compound_statement 
 	;
 
 declarations:	
@@ -196,8 +199,6 @@ multop:
 %%
 
 int main(int argc, char *argv[]){
-	FILE *fp;
-
 	if (argc < 2){
 		fprintf(stderr, "파일이름을 입력해야 합니다.\n");
 		exit(1);
@@ -206,14 +207,15 @@ int main(int argc, char *argv[]){
 		yyparse();
 		fclose(yyin);
 		printf("프로그램 종료\n");
+
 	}else{
 		fprintf(stderr, "%s 파일을 찾을 수 없습니다.\n", argv[1]);
 		exit(1);
 	}
-
 	return 0;
 }
 
 void yyerror(char const *s){
-	fprintf(stderr,"Error | Line: %d\n%s\n",yylineno,s);
+	extern char* yytext;
+	fprintf(stderr, "error in line %d: %s %s\n", yylineno, s, yytext);
 }
