@@ -2,7 +2,6 @@
 	#include <stdio.h>
 	#include <string.h>
 	#include <stdlib.h>
-	#include "symtab.h"
 	extern int yylineno;
 	int yylex();
 	void yyerror (char const *);
@@ -26,6 +25,7 @@
 %precedence KW_ELSE
 %right KW_IN
 
+%left OP_ADD OP_SUB OP_MUL OP_DIV
 %%
 
 program:
@@ -105,7 +105,7 @@ variable:
 
 print_statement:
 	KW_PRINT
-	| KW_PRINT DL_LPAREN expression DL_RPAREN 
+	| KW_PRINT DL_LPAREN expression DL_RPAREN	{printf("%d", $<ival>3);} 
 	;
 
 procedure_statement:
