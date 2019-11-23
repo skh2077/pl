@@ -2,6 +2,7 @@
 	#include "project.tab.h"
 %}
 
+%option yylineno
 %option noyywrap
 DIGIT	[0-9]
 LETTER	[a-zA-Z]
