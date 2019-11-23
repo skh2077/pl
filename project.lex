@@ -1,8 +1,5 @@
 %{
 #include "project.tab.h"
-
-int line_num = 0;
-		
 %}
 
 %option yylineno
@@ -11,7 +8,7 @@ DIGIT	[0-9]
 LETTER	[a-zA-Z]
 
 %%
-[\n]												{ line_num++; }										
+[\n]												;										
 [\t ]+												;
 mainprog											{ return KW_MAIN;			}
 function											{ return KW_FUNC;			}
