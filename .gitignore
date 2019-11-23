@@ -1,6 +1,10 @@
 # flex/bison files
 *.tab.*
 lex.yy.c
+project
+
+# Test input file
+test.txt
 
 # Others
 *.zip
