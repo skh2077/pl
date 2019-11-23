@@ -1,5 +1,8 @@
 %{
-	#include "project.tab.h"
+#include "project.tab.h"
+
+int line_num = 0;
+		
 %}
 
 %option noyywrap
@@ -7,7 +10,8 @@ DIGIT	[0-9]
 LETTER	[a-zA-Z]
 
 %%
-[\n\t ]+
+[\n]												{ line_num++; }										
+[\t ]+												;
 mainprog											{ return KW_MAIN;			}
 function											{ return KW_FUNC;			}
 procedure											{ return KW_PROC;			}
