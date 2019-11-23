@@ -2,6 +2,7 @@
 	#include <stdio.h>
 	#include <string.h>
 	#include <stdlib.h>
+	extern int yylineno;
 	void yyerror (char const *);
 	int yylex();
 	FILE *yyin;
@@ -12,6 +13,7 @@
 	float fval;
 	char *sval;
 }
+%locations
 
 %token <sval> ID KW_MAIN KW_FUNC KW_PROC KW_BEGIN KW_END KW_INT KW_FLOAT KW_IF KW_THEN KW_ELSE KW_ELIF KW_NOP KW_FOR KW_WHILE KW_RETURN KW_PRINT KW_IN OP_ADD OP_SUB OP_MUL OP_DIV OP_LT OP_LE OP_GT OP_GE OP_EQUAL OP_NOTEQ OP_NEG DL_SMCOLON DL_DOT DL_COMMA DL_ASSIGN DL_LPAREN DL_RPAREN DL_LBRACK DL_RBRACK DL_COLON
 %token <ival> INTEGER
@@ -213,5 +215,5 @@ int main(int argc, char *argv[]){
 }
 
 void yyerror(char const *s){
-	fprintf(stderr, "%s\n", s);
+	fprintf(stderr,"Error | Line: %d\n%s\n",yylineno,s);
 }
