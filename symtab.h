@@ -2,35 +2,43 @@
 #define SYMTAB_H
 
 #include<stdio.h>
-#include<string.h>
-#include<stdlib.h>
-#include <stdarg.h>
-#define NSYM 1000
+#define STACK_MAX 1000
 
-struct symbol {
+typedef union{
+	int ival;
+	float fval;
+	char *sval;
+}union_val;
+
+typedef enum{
+	i,	//int
+	f,	//float
+	s,	//string
+	v	//void
+}val_type;
+
+typedef enum{
+	var,
+	func,
+	proc
+}sym_type;
+
+typedef struct{
   char* name;
-  int value;
-  int type;
-  int row;
+  val_type type;
+  union_val value;
+  sym_type sym;
+}symbol;
 
-};
+symbol sym_stack[STACK_MAX];
+int top;
 
-// Hash table using open addressing
-struct symbol symTab[NSYM];
+void init_stack(void);
 
-void initTable(void);
+int *push (char *, val_type, union_val, sym_type);
 
-int hash(char* s);
+symbol *pop(void);
 
-struct symbol* searchA(char *s, int value, int type, int row);
-
-int declared(char* s);
-
-void printTable();
-
-extern int line_num;
-
-
-
+symbol *search(char *);
 
 #endif

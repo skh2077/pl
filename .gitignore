@@ -1,6 +1,13 @@
 # flex/bison files
 *.tab.*
 lex.yy.c
+project
+
+# Test input file
+test.txt
+
+# vim temporary file
+*.swp
 
 # Others
 *.zip

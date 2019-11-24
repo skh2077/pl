@@ -1,71 +1,42 @@
 #include "symtab.h"
 
-void initTable() {
-  struct symbol* sp;
-  for(sp=symTab; sp<&symTab[NSYM]; sp++) {
-    sp->name = NULL;
-    sp->value = 0;
-    sp->type = -1;
-    sp->row =-1;
-  }
+void init_stack(void){
+	top = -1;
 }
 
-int hash(char* s) {
-  int h = 5;
-  int l = strlen(s);
-  for(int i=0; i<l; i++) {
-    h = h*37 + s[i];
-  }
-  return h;
+int push(char *_name, val_type _type, union_val _value, sym_type _sym){
+	if(top < STACK_MAX - 1){
+		symbol new;
+		new.name = _name;
+		new.type = _type;
+		new.value = _value;
+		new.sym = _sym;
+		sym_stack[++top] = new;
+		return 0;
+	}
+	return -1;
 }
 
-struct symbol* searchA(char *s, int val, int typ, int r) {
-  struct symbol* sp = &symTab[hash(s)%NSYM];
-  int count = NSYM;
-  while(--count > 0) {
-    if(sp->name && !strcmp(sp->name, s))
-      return sp;
-    if(!sp->name) {
-      sp->name = strdup(s);
-      sp->value = val;
-      sp->type= typ;
-      sp->row=r;
-
-      return sp;
-    }
-
-    if(++sp > symTab + NSYM) 
-      sp = symTab;
-  }
-  printf("Symbol table full.\n");
-  exit(1);
-    
+symbol *pop(void){
+	if(top<0)
+		return NULL;
+	else return sym_stack[top--];
 }
 
-int declared(char *s) {
-  int h = hash(s)%NSYM;
-  struct symbol* sp = &symTab[h];
-  if(!sp->name)
-    return 0;
-  while(sp->name) {
-    if(!strcmp(sp->name, s))
-      return 1;
-    if(++sp > symTab + NSYM) sp = symTab;
-  }
-  return 0;
-}
+symbol *search(char *_name){
+	int loop=0;
+	symbol t;
+	
+	if(top<0)
+		return NULL;
 
-void printTable()
-{
-  int i;
-  struct symbol* sp= &symTab[0];
-  printf("<NAME\t, TYPE \t, ROW , INDEX> \n");
-  for(i=0;i<NSYM;i++)
-  {
-    if(sp->name)
-    {
-      printf("%s %s %d %d\n",sp->name,"ID",sp->row,i);
-    }
-    sp++;
-  }
+	//iterate until loop is top-1
+	for(t = *sym_stack; loop<top; t = sym_stack[++loop]){
+		if(strcmp(t.name, _name) == 0)
+			return t;
+	}
+	//check when loop is top
+	if(strcmp(t.name, _name)==0)
+		return t;
+	return NULL;
 }
