@@ -20,7 +20,7 @@ int push(char *_name, val_type _type, union_val _value, sym_type _sym){
 symbol *pop(void){
 	if(top<0)
 		return NULL;
-	else return sym_stack[top--];
+	else return &sym_stack[top--];
 }
 
 symbol *search(char *_name){
@@ -33,10 +33,10 @@ symbol *search(char *_name){
 	//iterate until loop is top-1
 	for(t = *sym_stack; loop<top; t = sym_stack[++loop]){
 		if(strcmp(t.name, _name) == 0)
-			return t;
+			return &sym_stack[loop];
 	}
 	//check when loop is top
 	if(strcmp(t.name, _name)==0)
-		return t;
+		return &sym_stack[loop];
 	return NULL;
 }

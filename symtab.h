@@ -2,6 +2,7 @@
 #define SYMTAB_H
 
 #include<stdio.h>
+#include<string.h>
 #define STACK_MAX 1000
 
 typedef union{
@@ -35,10 +36,12 @@ int top;
 
 void init_stack(void);
 
-int *push (char *, val_type, union_val, sym_type);
+int push (char *, val_type, union_val, sym_type);
 
 symbol *pop(void);
 
 symbol *search(char *);
+
+void print_stack(void);
 
 #endif
