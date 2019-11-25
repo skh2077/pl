@@ -1,6 +1,37 @@
 #include <string.h>
 #include "symtab.h"
 
+void *ret_val(symbol *sym){
+	if(!sym)
+		return (void *)NULL;
+	else{
+		switch(sym->sym){
+			case var:
+				if(sym->type == 0)
+					return &sym->value.ival;
+				else if(sym->type == 1)
+					return &sym->value.fval;
+				else if(sym->type % 2 == 0)
+					return sym->value.iptr;
+				else if(sym->type % 2 == 1)
+					return sym->value.fptr;
+				else
+					return (void *)NULL;
+			case func:
+				if(sym->type == 0)
+					return &sym->value.ifunc;
+				else if(sym->type == 1)
+					return &sym->value.ffunc;
+				else
+					return (void *)NULL;
+			case proc:
+				return sym->value.proc;
+			default:
+				return (void *)NULL;
+		}
+	}
+}
+
 void init_stack(void){
 	top = -1;
 }

@@ -19,9 +19,9 @@
 	int ival;
 	float fval;
 	char *sval;
+	void *vptr;
 	struct val_node *val_node_ptr;
 	union_val union_val;
-	symbol *symbol_ptr;
 }
 %start program
 
@@ -33,7 +33,7 @@
 %token <fval> FLOAT
 %type <val_node_ptr> identifier_list
 %type <union_val> factor
-%type <symbol_ptr> variable
+%type <vptr> variable
 %precedence DL_COLON
 %precedence KW_ELIF
 %precedence KW_ELSE
@@ -134,34 +134,57 @@ statement:
 
 variable:
 	ID										{
+		void *null = NULL;
 		symbol *temp;
 		temp = search($1);
 		if(!temp){
-			char *errmsg = strcat($1, (char *) " is not defined.");
+			char *errmsg = strcat($1, " is not defined.");
 			yyerror(errmsg);
-			$$ = (symbol *)NULL;
+			$$ = null;
+		}
+		else if(temp->sym == var){
+			if(temp->type==0)
+				$$ = &temp->value.ival;
+			else if(temp->type==1)
+				$$ = &temp->value.fval;
+			else{
+				char *errmsg = strcat($1, " is array.");
+				yyerror(errmsg);
+				$$ = null;
+			}
 		}
 		else{
-			$$ = temp;
+			char *errmsg = strcat($1, " is function.");
+			yyerror(errmsg);
+			$$ = null;
 		}
 	}
 	| ID DL_LBRACK expression DL_RBRACK	{
+		void *null = NULL;
 		symbol *temp;
 		temp = search($1);
 		//TODO: checking whether $3 is ival.
 		if(!temp){
-			char *errmsg = strcat($1, (char *) " is not defined.");
+			char *errmsg = strcat($1, " is not defined.");
 			yyerror(errmsg);
-			$$ = (symbol *)NULL;
+			$$ = null;
 		}
-		else{
-			unsigned long arr_size = sizeof(temp->value), ele_size = sizeof(*temp->value);
-			if($<ival>3 < 0 || $<ival>3 >= (int)(arr_size / ele_size)){
+		else if(temp->sym == var){
+			int type = temp->type % 2, arr_size = temp->type / 2;
+			if(arr_size < 1){
+				char *errmsg = strcat($1, " is not array.");
+				yyerror(errmsg);
+				$$ = null;
+			}
+			else if($<ival>3 < 0 || $<ival>3 >= arr_size){
 				yyerror("Array index out of bounds.");
-				$$ = (symbol *)NULL;
+				$$ = null;
 			}
 			else{
-				temp->value = (typeof(temp->value))temp->value + $<ival>3;
+				if(type==0)
+					$$ = &temp->value.iptr[$<ival>3];
+				else
+					$$ = &temp->value.fptr[$<ival>3];
 			}
 		}
 	}
@@ -231,10 +254,12 @@ term:
 factor:
 	INTEGER					{ union_val temp; temp.ival = $1; $$ = temp; }
 	| FLOAT					{ union_val temp; temp.fval = $1; $$ = temp; } 
-	| variable
-	| procedure_statement
-	| OP_NEG factor
-	| sign factor
+	| variable				{
+		union_val temp;
+	}
+	| procedure_statement	{}
+	| OP_NEG factor			{}
+	| sign factor			{}
 	;
 
 sign:
@@ -285,5 +310,5 @@ int main(int argc, char *argv[]){
 
 void yyerror(char const *s){
 	extern char* yytext;
-	fprintf(stderr, "error in line %d: %s %s\n", yylineno, s, yytext);
+	fprintf(stderr, "error in line %d: %s before %s\n", yylineno, s, yytext);
 }

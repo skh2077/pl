@@ -203,7 +203,7 @@ Nonterminals, with rules where they appear
     statement (56)
         on left: 23 24 25 26 27 28 29 30 31
         on right: 21 22 37 38 40 41 42 43 44
-    variable <symbol_ptr> (57)
+    variable <vptr> (57)
         on left: 32 33
         on right: 23 58
     print_statement (58)

@@ -28,8 +28,8 @@ typedef struct{
   sym_type sym;
 }symbol;
 
-// returns value that matches type.
-void *ret_val(symbol);
+// returns value and size of value that matches type.
+void *ret_val(symbol *);
 
 static symbol sym_stack[STACK_MAX];
 int top;
