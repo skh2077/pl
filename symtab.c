@@ -1,10 +1,12 @@
+#include <string.h>
 #include "symtab.h"
 
 void init_stack(void){
 	top = -1;
+	print_stack();
 }
 
-int push(char *_name, val_type _type, union_val _value, sym_type _sym){
+int push(char *_name, int _type, union_val _value, sym_type _sym){
 	if(top < STACK_MAX - 1){
 		symbol new;
 		new.name = _name;
@@ -25,18 +27,25 @@ symbol *pop(void){
 
 symbol *search(char *_name){
 	int loop=0;
-	symbol t;
 	
 	if(top<0)
 		return NULL;
 
-	//iterate until loop is top-1
-	for(t = *sym_stack; loop<top; t = sym_stack[++loop]){
-		if(strcmp(t.name, _name) == 0)
+	for(; loop<=top; loop++){
+		if(strcmp(sym_stack[loop].name, _name) == 0)
 			return &sym_stack[loop];
 	}
-	//check when loop is top
-	if(strcmp(t.name, _name)==0)
-		return &sym_stack[loop];
 	return NULL;
+}
+
+void print_stack(void){
+	int loop=0;
+	if (top<0){
+		printf("stack is empty\n");
+		return;
+	}
+	for(; loop<=top; loop++){
+		symbol sym = sym_stack[loop];
+		printf ("stack%d: %s value: %d\n", loop, sym.name, sym.value);
+	}
 }
