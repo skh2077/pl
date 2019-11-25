@@ -11,13 +11,6 @@ typedef union{
 }union_val;
 
 typedef enum{
-	i,	//int
-	f,	//float
-	s,	//string
-	v	//void
-}val_type;
-
-typedef enum{
 	var,
 	func,
 	proc
@@ -25,20 +18,23 @@ typedef enum{
 
 typedef struct{
   char* name;
-  val_type type;
+  int type;		//int: 0, float: 1, int array: 2, float array: 3
   union_val value;
   sym_type sym;
 }symbol;
 
-symbol sym_stack[STACK_MAX];
+static symbol sym_stack[STACK_MAX];
 int top;
 
 void init_stack(void);
 
-int *push (char *, val_type, union_val, sym_type);
+int push (char *, int, union_val, sym_type);
 
 symbol *pop(void);
 
 symbol *search(char *);
 
+void print_stack(void);
+
+char *symtostr(symbol);
 #endif

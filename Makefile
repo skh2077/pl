@@ -1,4 +1,5 @@
 CC		= gcc
+# if linux, LIBS = -lfl # if macOS, LIBS = -ll
 LIBS	= -ll
 LEX		= flex
 YACC	= bison
