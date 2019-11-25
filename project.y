@@ -2,7 +2,6 @@
 	#include <stdio.h>
 	#include <string.h>
 	#include <stdlib.h>
-	#include "symtab.h"
 	extern int yylineno;
 	int yylex();
 	void yyerror (char const *);
@@ -13,11 +12,16 @@
 		struct val_node *next;
 	};
 %}
-%union {
+%code requires{
+	#include "symtab.h"
+}
+%union yytype{
 	int ival;
 	float fval;
 	char *sval;
 	struct val_node *val_node_ptr;
+	union_val union_val;
+	symbol *symbol_ptr;
 }
 %start program
 
@@ -28,6 +32,8 @@
 %type <ival> type standard_type
 %token <fval> FLOAT
 %type <val_node_ptr> identifier_list
+%type <union_val> factor
+%type <symbol_ptr> variable
 %precedence DL_COLON
 %precedence KW_ELIF
 %precedence KW_ELSE
@@ -48,7 +54,7 @@ declarations:
 			union_val temp;
 			temp.ival = 0;
 			push(temp_node->value, $1, temp, var);
-			printf("push\n");
+			free(temp_node);
 		}
 	}
 	| %empty
@@ -127,13 +133,46 @@ statement:
 	;
 
 variable:
-	ID
-	| ID DL_LBRACK expression DL_RBRACK
+	ID										{
+		symbol *temp;
+		temp = search($1);
+		if(!temp){
+			char *errmsg = strcat($1, (char *) " is not defined.");
+			yyerror(errmsg);
+			$$ = (symbol *)NULL;
+		}
+		else{
+			$$ = temp;
+		}
+	}
+	| ID DL_LBRACK expression DL_RBRACK	{
+		symbol *temp;
+		temp = search($1);
+		//TODO: checking whether $3 is ival.
+		if(!temp){
+			char *errmsg = strcat($1, (char *) " is not defined.");
+			yyerror(errmsg);
+			$$ = (symbol *)NULL;
+		}
+		else{
+			unsigned long arr_size = sizeof(temp->value), ele_size = sizeof(*temp->value);
+			if($<ival>3 < 0 || $<ival>3 >= (int)(arr_size / ele_size)){
+				yyerror("Array index out of bounds.");
+				$$ = (symbol *)NULL;
+			}
+			else{
+				temp->value = (typeof(temp->value))temp->value + $<ival>3;
+			}
+		}
+	}
 	;
 
 print_statement:
-	KW_PRINT									{print_stack();}
-	| KW_PRINT DL_LPAREN expression DL_RPAREN	{printf("%d\n", $<ival>3);} 
+	KW_PRINT									{ print_stack(); }
+	| KW_PRINT DL_LPAREN expression DL_RPAREN	{
+		if($<ival>3)
+			printf("%d\n", $<ival>3);
+	} 
 	;
 
 procedure_statement:
@@ -190,8 +229,8 @@ term:
 	;
 
 factor:
-	INTEGER
-	| FLOAT
+	INTEGER					{ union_val temp; temp.ival = $1; $$ = temp; }
+	| FLOAT					{ union_val temp; temp.fval = $1; $$ = temp; } 
 	| variable
 	| procedure_statement
 	| OP_NEG factor

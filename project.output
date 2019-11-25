@@ -203,7 +203,7 @@ Nonterminals, with rules where they appear
     statement (56)
         on left: 23 24 25 26 27 28 29 30 31
         on right: 21 22 37 38 40 41 42 43 44
-    variable (57)
+    variable <symbol_ptr> (57)
         on left: 32 33
         on right: 23 58
     print_statement (58)
@@ -242,7 +242,7 @@ Nonterminals, with rules where they appear
     term (69)
         on left: 54 55
         on right: 52 53 55
-    factor (70)
+    factor <union_val> (70)
         on left: 56 57 58 59 60 61
         on right: 54 55 60 61
     sign (71)

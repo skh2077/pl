@@ -3,7 +3,6 @@
 
 void init_stack(void){
 	top = -1;
-	print_stack();
 }
 
 int push(char *_name, int _type, union_val _value, sym_type _sym){
@@ -26,12 +25,12 @@ symbol *pop(void){
 }
 
 symbol *search(char *_name){
-	int loop=0;
+	int loop=top;
 	
 	if(top<0)
 		return NULL;
 
-	for(; loop<=top; loop++){
+	for(; loop>=0; loop--){
 		if(strcmp(sym_stack[loop].name, _name) == 0)
 			return &sym_stack[loop];
 	}
