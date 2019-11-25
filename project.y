@@ -19,9 +19,8 @@
 	int ival;
 	float fval;
 	char *sval;
-	void *vptr;
 	struct val_node *val_node_ptr;
-	union_val union_val;
+	symbol *symbol_ptr;
 }
 %start program
 
@@ -32,8 +31,7 @@
 %type <ival> type standard_type
 %token <fval> FLOAT
 %type <val_node_ptr> identifier_list
-%type <union_val> factor
-%type <vptr> variable
+%type <symbol_ptr> factor variable
 %precedence DL_COLON
 %precedence KW_ELIF
 %precedence KW_ELSE
@@ -134,8 +132,7 @@ statement:
 
 variable:
 	ID										{
-		void *null = NULL;
-		symbol *temp;
+		symbol *null = NULL, *temp;
 		temp = search($1);
 		if(!temp){
 			char *errmsg = strcat($1, " is not defined.");
@@ -143,10 +140,9 @@ variable:
 			$$ = null;
 		}
 		else if(temp->sym == var){
-			if(temp->type==0)
-				$$ = &temp->value.ival;
-			else if(temp->type==1)
-				$$ = &temp->value.fval;
+			if(temp->type==0 || temp->type==1){
+				$$ = temp;
+			}
 			else{
 				char *errmsg = strcat($1, " is array.");
 				yyerror(errmsg);
@@ -160,8 +156,7 @@ variable:
 		}
 	}
 	| ID DL_LBRACK expression DL_RBRACK	{
-		void *null = NULL;
-		symbol *temp;
+		symbol *null = NULL, *temp, *ret;
 		temp = search($1);
 		//TODO: checking whether $3 is ival.
 		if(!temp){
@@ -181,10 +176,15 @@ variable:
 				$$ = null;
 			}
 			else{
+				ret = (symbol *)malloc(sizeof(symbol));
+				ret->name = (char *)NULL;	//flag for deallocate;
+				ret->type = type;
 				if(type==0)
-					$$ = &temp->value.iptr[$<ival>3];
+					ret->value.iptr = &temp->value.iptr[$<ival>3];
 				else
-					$$ = &temp->value.fptr[$<ival>3];
+					ret->value.fptr = &temp->value.fptr[$<ival>3];
+				ret->sym = var;
+				$$ = ret;
 			}
 		}
 	}
@@ -252,11 +252,23 @@ term:
 	;
 
 factor:
-	INTEGER					{ union_val temp; temp.ival = $1; $$ = temp; }
-	| FLOAT					{ union_val temp; temp.fval = $1; $$ = temp; } 
-	| variable				{
-		union_val temp;
+	INTEGER					{
+		symbol *ret = (symbol *)malloc(sizeof(symbol));
+		ret->name = (char *)NULL;	//flag for deallocation.
+		ret->type = 0;
+		ret->value.ival = $1;
+		ret->sym = var;
+		$$ = ret;
 	}
+	| FLOAT					{
+		symbol *ret = (symbol *)malloc(sizeof(symbol));
+		ret->name = (char *)NULL;	//flag for deallocation.
+		ret->type = 1;
+		ret->value.fval = $1;
+		ret->sym = var;
+		$$ = ret;
+	}
+	| variable				{ $$ = $1; }
 	| procedure_statement	{}
 	| OP_NEG factor			{}
 	| sign factor			{}
