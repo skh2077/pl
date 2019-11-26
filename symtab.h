@@ -5,7 +5,7 @@
 #define STACK_MAX 1000
 
 typedef union{
-	int ival;
+	int ival;		//0: false, other: ture when boolean type
 	int *iptr;
 	float fval;
 	float *fptr;
@@ -23,13 +23,10 @@ typedef enum{
 
 typedef struct{
   char* name;
-  int type;		//int: 0, float: 1, int[n]: 2n, float[n]: 1+2n
+  int type;		//boolean: negative value, int: 0, float: 1, int[n]: 2n, float[n]: 1+2n
   union_val value;
   sym_type sym;
 }symbol;
-
-// returns value and size of value that matches type.
-void *ret_val(symbol *);
 
 static symbol sym_stack[STACK_MAX];
 int top;

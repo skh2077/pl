@@ -233,19 +233,19 @@ Nonterminals, with rules where they appear
     expression_list (66)
         on left: 48 49
         on right: 47 49
-    expression (67)
+    expression <symbol_ptr> (67)
         on left: 50 51
         on right: 23 30 33 35 37 38 40 41 42 48 49
-    simple_expression (68)
+    simple_expression <symbol_ptr> (68)
         on left: 52 53
         on right: 45 50 51 53
-    term (69)
+    term <symbol_ptr> (69)
         on left: 54 55
         on right: 52 53 55
     factor <symbol_ptr> (70)
         on left: 56 57 58 59 60 61
         on right: 54 55 60 61
-    sign (71)
+    sign <sval> (71)
         on left: 62 63
         on right: 61
     relop (72)
