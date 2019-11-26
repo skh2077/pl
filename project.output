@@ -124,39 +124,39 @@ Terminals, with rules where they appear
     KW_PROC <sval> (261) 16
     KW_BEGIN <sval> (262) 7
     KW_END <sval> (263) 7
-    KW_INT <sval> (264) 12
-    KW_FLOAT <sval> (265) 13
-    KW_IF <sval> (266) 37 38
-    KW_THEN <sval> (267)
-    KW_ELSE <sval> (268) 38 42 43
-    KW_ELIF <sval> (269) 40
-    KW_NOP <sval> (270) 31
-    KW_FOR <sval> (271) 43 44
-    KW_WHILE <sval> (272) 41 42
-    KW_RETURN <sval> (273) 30
-    KW_PRINT <sval> (274) 34 35
-    KW_IN <sval> (275) 43 44 70
-    OP_ADD <sval> (276) 62 71
-    OP_SUB <sval> (277) 63 72
-    OP_MUL <sval> (278) 73
-    OP_DIV <sval> (279) 74
-    OP_LT <sval> (280) 66
-    OP_LE <sval> (281) 67
-    OP_GT <sval> (282) 64
-    OP_GE <sval> (283) 65
-    OP_EQUAL <sval> (284) 68
-    OP_NOTEQ <sval> (285) 69
-    OP_NEG <sval> (286) 60
-    DL_SMCOLON <sval> (287) 2 3 15 16 20 22
-    DL_DOT <sval> (288)
-    DL_COMMA <sval> (289) 11 49
-    DL_ASSIGN <sval> (290) 23
-    DL_LPAREN <sval> (291) 17 35 36
-    DL_RPAREN <sval> (292) 17 35 36
-    DL_LBRACK <sval> (293) 9 33
-    DL_RBRACK <sval> (294) 9 33
-    DL_COLON <sval> (295) 15 19 20 37 38 40 41 42 43 44
-    INTEGER <ival> (296) 9 56
+    KW_IF <sval> (264) 37 38
+    KW_THEN <sval> (265)
+    KW_ELSE <sval> (266) 38 42 43
+    KW_ELIF <sval> (267) 40
+    KW_NOP <sval> (268) 31
+    KW_FOR <sval> (269) 43 44
+    KW_WHILE <sval> (270) 41 42
+    KW_RETURN <sval> (271) 30
+    KW_PRINT <sval> (272) 34 35
+    KW_IN <sval> (273) 43 44 70
+    OP_ADD <sval> (274) 62 71
+    OP_SUB <sval> (275) 63 72
+    OP_MUL <sval> (276) 73
+    OP_DIV <sval> (277) 74
+    OP_LT <sval> (278) 66
+    OP_LE <sval> (279) 67
+    OP_GT <sval> (280) 64
+    OP_GE <sval> (281) 65
+    OP_EQUAL <sval> (282) 68
+    OP_NOTEQ <sval> (283) 69
+    OP_NEG <sval> (284) 60
+    DL_SMCOLON <sval> (285) 2 3 15 16 20 22
+    DL_DOT <sval> (286)
+    DL_COMMA <sval> (287) 11 49
+    DL_ASSIGN <sval> (288) 23
+    DL_LPAREN <sval> (289) 17 35 36
+    DL_RPAREN <sval> (290) 17 35 36
+    DL_LBRACK <sval> (291) 9 33
+    DL_RBRACK <sval> (292) 9 33
+    DL_COLON <sval> (293) 15 19 20 37 38 40 41 42 43 44
+    INTEGER <ival> (294) 9 56
+    KW_INT <ival> (295) 12
+    KW_FLOAT <ival> (296) 13
     FLOAT <fval> (297) 57
 
 
@@ -176,13 +176,13 @@ Nonterminals, with rules where they appear
     compound_statement (47)
         on left: 7
         on right: 2 14 26
-    type (48)
+    type <ival> (48)
         on left: 8 9
         on right: 3 19 20
-    identifier_list (49)
+    identifier_list <val_node_ptr> (49)
         on left: 10 11
         on right: 3 11 19 20
-    standard_type (50)
+    standard_type <ival> (50)
         on left: 12 13
         on right: 8 9 15
     subprogram_declaration (51)
@@ -203,7 +203,7 @@ Nonterminals, with rules where they appear
     statement (56)
         on left: 23 24 25 26 27 28 29 30 31
         on right: 21 22 37 38 40 41 42 43 44
-    variable (57)
+    variable <symbol_ptr> (57)
         on left: 32 33
         on right: 23 58
     print_statement (58)
@@ -242,7 +242,7 @@ Nonterminals, with rules where they appear
     term (69)
         on left: 54 55
         on right: 52 53 55
-    factor (70)
+    factor <symbol_ptr> (70)
         on left: 56 57 58 59 60 61
         on right: 54 55 60 61
     sign (71)

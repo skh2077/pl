@@ -32,5 +32,6 @@ begin
                 y = 12
             end
     end;
-    print(x)
+    print(x);
+	print
 end
