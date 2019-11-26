@@ -9,7 +9,7 @@
 	FILE *yyin;
 
 	struct val_node{
-		char *value;
+		char *name;
 		struct val_node *next;
 	};
 %}
@@ -51,10 +51,12 @@ declarations:
 	type identifier_list DL_SMCOLON declarations	{
 		//TODO: type implement
 		struct val_node *temp_node;
+		union_val null;
+		null.iptr = NULL;
+		int type = 
 		for (temp_node=$2; temp_node; temp_node = temp_node->next){
-			union_val temp;
-			temp.ival = 0;
-			push(temp_node->value, $1, temp, var);
+			
+			push(temp_node->name, $1, null, var);
 			free(temp_node);
 		}
 	}
@@ -78,7 +80,7 @@ type:
 identifier_list:
 	ID									{
 		struct val_node *new = (struct val_node *)malloc(sizeof(struct val_node));
-		new->value = $1;
+		new->name = $1;
 		new->next = NULL;
 		$$ = new;
 	}
@@ -86,7 +88,7 @@ identifier_list:
 		struct val_node *list, *new;
 		list = $3;
 		new = (struct val_node *)malloc(sizeof(struct val_node));
-		new->value = $1;
+		new->name = $1;
 		new->next = list;
 		$$ = new;
 	}
@@ -158,7 +160,6 @@ variable:
 	| ID DL_LBRACK expression DL_RBRACK	{
 		symbol *null = NULL, *temp, *ret;
 		temp = search($1);
-		//TODO: checking whether $3 is ival.
 		if(!temp){
 			char *errmsg = strcat($1, " is not defined.");
 			yyerror(errmsg);
@@ -335,7 +336,8 @@ factor:
 
 		$$ = ret;
 
-		free($2);
+		if(!$2->name)
+			free($2);
 	}
 	;
 
