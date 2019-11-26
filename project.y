@@ -5,6 +5,7 @@
 	extern int yylineno;
 	int yylex();
 	void yyerror (char const *);
+
 	FILE *yyin;
 
 	struct val_node{
@@ -27,11 +28,12 @@
 %locations
 
 %token <sval> ID KW_MAIN KW_FUNC KW_PROC KW_BEGIN KW_END KW_IF KW_THEN KW_ELSE KW_ELIF KW_NOP KW_FOR KW_WHILE KW_RETURN KW_PRINT KW_IN OP_ADD OP_SUB OP_MUL OP_DIV OP_LT OP_LE OP_GT OP_GE OP_EQUAL OP_NOTEQ OP_NEG DL_SMCOLON DL_DOT DL_COMMA DL_ASSIGN DL_LPAREN DL_RPAREN DL_LBRACK DL_RBRACK DL_COLON
+%type <sval> sign
 %token <ival> INTEGER KW_INT KW_FLOAT
 %type <ival> type standard_type
 %token <fval> FLOAT
 %type <val_node_ptr> identifier_list
-%type <symbol_ptr> factor variable
+%type <symbol_ptr>  term factor variable expression simple_expression
 %precedence DL_COLON
 %precedence KW_ELIF
 %precedence KW_ELSE
@@ -47,6 +49,7 @@ program:
 
 declarations:	
 	type identifier_list DL_SMCOLON declarations	{
+		//TODO: type implement
 		struct val_node *temp_node;
 		for (temp_node=$2; temp_node; temp_node = temp_node->next){
 			union_val temp;
@@ -68,8 +71,8 @@ compound_statement:
 	;
 
 type:
-	standard_type
-	| standard_type DL_LBRACK INTEGER DL_RBRACK
+	standard_type								{ $$ = $1; }
+	| standard_type DL_LBRACK INTEGER DL_RBRACK	{ $$ = $1 + $3 * 2; }
 	;
 
 identifier_list:
@@ -138,18 +141,15 @@ variable:
 			char *errmsg = strcat($1, " is not defined.");
 			yyerror(errmsg);
 			$$ = null;
-		}
-		else if(temp->sym == var){
+		}else if(temp->sym == var){
 			if(temp->type==0 || temp->type==1){
 				$$ = temp;
-			}
-			else{
+			}else{
 				char *errmsg = strcat($1, " is array.");
 				yyerror(errmsg);
 				$$ = null;
 			}
-		}
-		else{
+		}else{
 			char *errmsg = strcat($1, " is function.");
 			yyerror(errmsg);
 			$$ = null;
@@ -163,19 +163,26 @@ variable:
 			char *errmsg = strcat($1, " is not defined.");
 			yyerror(errmsg);
 			$$ = null;
+		}else if(temp->sym != var){
+			char * errmsg =strcat($1, " is function type.");
+			yyerror(errmsg);
+			$$ = null;
 		}
-		else if(temp->sym == var){
+		else if($3->type != 0){
+			char *errmsg = "index is not integer.";
+			yyerror(errmsg);
+			$$ = null;
+		}else{
 			int type = temp->type % 2, arr_size = temp->type / 2;
 			if(arr_size < 1){
 				char *errmsg = strcat($1, " is not array.");
 				yyerror(errmsg);
 				$$ = null;
-			}
-			else if($<ival>3 < 0 || $<ival>3 >= arr_size){
-				yyerror("Array index out of bounds.");
+			}else if($3->value.ival < 0 || $3->value.ival >= arr_size){
+				char *errmsg = "Array index out of bounds.";
+				yyerror(errmsg);
 				$$ = null;
-			}
-			else{
+			}else{
 				ret = (symbol *)malloc(sizeof(symbol));
 				ret->name = (char *)NULL;	//flag for deallocate;
 				ret->type = type;
@@ -193,8 +200,35 @@ variable:
 print_statement:
 	KW_PRINT									{ print_stack(); }
 	| KW_PRINT DL_LPAREN expression DL_RPAREN	{
-		if($<ival>3)
-			printf("%d\n", $<ival>3);
+		if(!$3){
+			yyerror("unvalid expresson.");
+			break;
+		}
+		switch($3->sym){
+			case var:
+				if($3->type < 0){
+					char *print_str;
+					print_str = $3->value.ival == 0 ? "false" : "true";
+					printf("%s\n", print_str);
+				}else if($3->type > 1){
+					if($3->type % 2 == 0)
+						printf("%d\n", *$3->value.iptr);
+					else
+						printf("%f\n", *$3->value.fptr);
+				}else{
+					if($3->type % 2 == 0)
+						printf("%d\n", $3->value.ival);
+					else
+						printf("%f\n", $3->value.fval);
+				}
+				if(!$3->name)
+					free($3);
+				break;
+			default:
+				printf("function\n");
+				break;
+		}
+
 	} 
 	;
 
@@ -270,8 +304,39 @@ factor:
 	}
 	| variable				{ $$ = $1; }
 	| procedure_statement	{}
-	| OP_NEG factor			{}
-	| sign factor			{}
+	| OP_NEG factor			{
+		symbol *ret = $2 ? NULL : (symbol *)malloc(sizeof(symbol));
+		$$ = ret;
+	}
+	| sign factor			{
+		symbol *ret, *null = NULL;
+		if(!$2){
+			char * errmsg = "variable is not defined.";
+			yyerror(errmsg);
+			$$ = null;
+			break;
+		}else if($2->sym != var){
+			char *errmsg = "invalid type 'function' to unary expression.";
+			yyerror(errmsg);
+			$$ = null;
+			break;
+		}else if($2->type > 1){
+			char *errmsg = " is invalid type 'array' to unary expression.";
+		}
+		ret = (symbol *)malloc(sizeof(symbol));
+		ret->name = (char *)NULL;	//flag for deallocation.
+		ret->type = $2->type;
+		int sign = *$1 == '-' ? -1 : 1;
+		if($2->type == 0)
+			ret->value.ival = $2->value.ival * sign;
+		else if($2->type == 1)
+			ret->value.fval = $2->value.fval * (float)sign;
+		ret->sym = var;
+
+		$$ = ret;
+
+		free($2);
+	}
 	;
 
 sign:
@@ -298,7 +363,6 @@ multop:
 	OP_MUL
 	| OP_DIV
 	;
-
 
 %%
 
