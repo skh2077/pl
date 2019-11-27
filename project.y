@@ -51,12 +51,20 @@ declarations:
 	type identifier_list DL_SMCOLON declarations	{
 		//TODO: type implement
 		struct val_node *temp_node;
-		union_val null;
+		union_val null, value;
 		null.iptr = NULL;
-		int type = 
+		int arr_size = $1 / 2;
+
 		for (temp_node=$2; temp_node; temp_node = temp_node->next){
-			
-			push(temp_node->name, $1, null, var);
+			if (arr_size > 0){
+				if($1 % 2 == 0)
+					value.iptr = (int *)malloc(sizeof(int) * arr_size);
+				else
+					value.fptr = (float *)malloc(sizeof(float) * arr_size);
+			}else
+				value = null;
+
+			push(temp_node->name, $1, value, var);
 			free(temp_node);
 		}
 	}
@@ -124,7 +132,36 @@ statement_list:
 	;
 
 statement:
-	variable DL_ASSIGN expression
+	variable DL_ASSIGN expression	{
+		if(!$1 || !$3){
+			char *errmsg = "value is invalid.";
+			yyerror(errmsg);
+		}else if($1->type != $3->type){
+			int type1 = $1->type, type3 = $3->type;
+			if(type1 % 2 == type3 % 2){
+				if(type1 > 1 && !$1->name){					//If $1 is array element.
+					if(type3 == 0)
+						*$1->value.iptr = $3->value.ival;
+					else if(type3 == 1)
+						*$1->value.fptr = $3->value.fval;
+				}else if(type3 > 1 && !$3->name){				//If $3 is array element.
+					if(type1 == 0)
+						$1->value.ival = *$3->value.iptr;
+					else if(type1 == 1)
+						$1->value.fval = *$3->value.fptr;
+				}
+			}
+			char *errmsg = "assigning to diffrent type.";
+			yyerror(errmsg);
+		}else{
+					printf("dddd: %d\n", $3->type);
+			$1->value = $3->value;
+			if(!$3->name)
+				free($3);
+			if(!$1->name)
+				free($1);
+		}
+	}
 	| print_statement
 	| procedure_statement
 	| compound_statement
@@ -140,17 +177,11 @@ variable:
 		symbol *null = NULL, *temp;
 		temp = search($1);
 		if(!temp){
-			char *errmsg = strcat($1, " is not defined.");
+			char *errmsg = strcat($1, " is undefined.");
 			yyerror(errmsg);
 			$$ = null;
 		}else if(temp->sym == var){
-			if(temp->type==0 || temp->type==1){
-				$$ = temp;
-			}else{
-				char *errmsg = strcat($1, " is array.");
-				yyerror(errmsg);
-				$$ = null;
-			}
+			$$ = temp;	
 		}else{
 			char *errmsg = strcat($1, " is function.");
 			yyerror(errmsg);
@@ -161,7 +192,7 @@ variable:
 		symbol *null = NULL, *temp, *ret;
 		temp = search($1);
 		if(!temp){
-			char *errmsg = strcat($1, " is not defined.");
+			char *errmsg = strcat($1, " is undefined.");
 			yyerror(errmsg);
 			$$ = null;
 		}else if(temp->sym != var){
@@ -169,31 +200,38 @@ variable:
 			yyerror(errmsg);
 			$$ = null;
 		}
-		else if($3->type != 0){
-			char *errmsg = "index is not integer.";
-			yyerror(errmsg);
+		else if (!$3){
+			yyerror("index is invalid");
 			$$ = null;
 		}else{
-			int type = temp->type % 2, arr_size = temp->type / 2;
-			if(arr_size < 1){
-				char *errmsg = strcat($1, " is not array.");
-				yyerror(errmsg);
-				$$ = null;
-			}else if($3->value.ival < 0 || $3->value.ival >= arr_size){
-				char *errmsg = "Array index out of bounds.";
+			if($3->type != 0){
+				char *errmsg = "index is not integer.";
 				yyerror(errmsg);
 				$$ = null;
 			}else{
-				ret = (symbol *)malloc(sizeof(symbol));
-				ret->name = (char *)NULL;	//flag for deallocate;
-				ret->type = type;
-				if(type==0)
-					ret->value.iptr = &temp->value.iptr[$<ival>3];
-				else
-					ret->value.fptr = &temp->value.fptr[$<ival>3];
-				ret->sym = var;
-				$$ = ret;
+				int arr_size = temp->type / 2;
+				if(arr_size < 1){
+					char *errmsg = strcat($1, " is not array.");
+					yyerror(errmsg);
+					$$ = null;
+				}else if($3->value.ival < 0 || $3->value.ival >= arr_size){
+					char *errmsg = "Array index out of bounds.";
+					yyerror(errmsg);
+					$$ = null;
+				}else{	//If name is null and type is array, then that symbol is array element.
+					ret = (symbol *)malloc(sizeof(symbol));
+					ret->name = (char *)NULL;	//flag for deallocate;
+					ret->type = temp->type;
+					if(temp->type % 2==0)
+						ret->value.iptr = &temp->value.iptr[$3->value.ival];
+					else
+						ret->value.fptr = &temp->value.fptr[$3->value.ival];
+					ret->sym = var;
+					$$ = ret;
+				}
 			}
+			if(!$3->name)
+				free($3);
 		}
 	}
 	;
@@ -201,35 +239,13 @@ variable:
 print_statement:
 	KW_PRINT									{ print_stack(); }
 	| KW_PRINT DL_LPAREN expression DL_RPAREN	{
-		if(!$3){
-			yyerror("unvalid expresson.");
-			break;
-		}
-		switch($3->sym){
-			case var:
-				if($3->type < 0){
-					char *print_str;
-					print_str = $3->value.ival == 0 ? "false" : "true";
-					printf("%s\n", print_str);
-				}else if($3->type > 1){
-					if($3->type % 2 == 0)
-						printf("%d\n", *$3->value.iptr);
-					else
-						printf("%f\n", *$3->value.fptr);
-				}else{
-					if($3->type % 2 == 0)
-						printf("%d\n", $3->value.ival);
-					else
-						printf("%f\n", $3->value.fval);
-				}
-				if(!$3->name)
-					free($3);
-				break;
-			default:
-				printf("function\n");
-				break;
-		}
+		if(!$3)
+			yyerror("invalid expression.");
+		print_sym($3);
+		printf("\n");
 
+		if(!$3->name)
+			free($3);
 	} 
 	;
 
@@ -272,17 +288,23 @@ expression_list:
 	;
 
 expression:
-	simple_expression
+	simple_expression		{
+		$$ = $1;
+	}
 	| simple_expression relop simple_expression
 	;
 
 simple_expression:
-	term
+	term					{
+		$$ = $1;
+	}
 	| term addop simple_expression
 	;
 
 term:
-	factor
+	factor					{
+		$$ = $1;
+	}
 	| factor multop term
 	;
 
@@ -312,7 +334,7 @@ factor:
 	| sign factor			{
 		symbol *ret, *null = NULL;
 		if(!$2){
-			char * errmsg = "variable is not defined.";
+			char * errmsg = "variable is undefined.";
 			yyerror(errmsg);
 			$$ = null;
 			break;
