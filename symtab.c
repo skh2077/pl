@@ -38,13 +38,50 @@ symbol *search(char *_name){
 }
 
 void print_stack(void){
-	int loop=0;
+	int loop=top;
 	if (top<0){
 		printf("stack is empty\n");
 		return;
 	}
-	for(; loop<=top; loop++){
+	for(; loop>=0; loop--){
 		symbol sym = sym_stack[loop];
-		printf ("stack%d: %s value: %d\n", loop, sym.name, sym.value);
+		printf("stack %d -> %s : ", loop, sym.name);
+		print_sym(&sym);
+		printf("\n");
 	}
+}
+
+void print_sym(symbol *sym){
+	if(!sym)
+		return;
+	switch(sym->sym){
+		case var:
+			if(sym->type < 0){
+				char *print_str;
+				print_str = sym->value.ival == -1 ? "false" : "true";
+				printf("%s", print_str);
+			}else if(sym->type > 1){
+				int loop = 0, arr_size = sym->type / 2;
+				printf("[ ");
+				if(sym->type % 2 == 0){
+					for(; loop < arr_size-1; loop++){
+						printf("%d, ", sym->value.iptr[loop]);
+					}
+					printf("%d ]", sym->value.iptr[arr_size-1]);
+				}else{
+					for(; loop < arr_size-1; loop++){
+						printf("%f, ", sym->value.fptr[loop]);
+					}
+					printf("%f ]", sym->value.fptr[arr_size-1]);
+				}
+			}else{
+				if(sym->type % 2 == 0)
+					printf("%d", sym->value.ival);
+				else
+					printf("%f", sym->value.fval);
+			}
+			break;
+		default:
+			printf("function");
+	}	
 }
