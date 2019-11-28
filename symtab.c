@@ -116,20 +116,18 @@ void print_sym(symbol *sym){
 			printf("%f", *sym->value.fptr);
 			return;
 		case _int_arr:
-			loop = 0;
 			arr_size = sym->type / 2;
 
 			printf("[ ");
-			for(; loop < arr_size-1; loop++)
+			for(loop = 0; loop < arr_size-1; loop++)
 				printf("%d, ", sym->value.iptr[loop]);
 			printf("%d ]", sym->value.iptr[arr_size-1]);
 			return;
 		case _float_arr:
-			loop = 0;
 			arr_size = sym->type / 2;
 			
 			printf("[ ");
-			for(; loop < arr_size-1; loop++)
+			for(loop = 0; loop < arr_size-1; loop++)
 				printf("%f, ", sym->value.fptr[loop]);
 			printf("%f ]", sym->value.fptr[arr_size-1]);
 			return;

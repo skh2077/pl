@@ -2,6 +2,7 @@
 	#include <stdio.h>
 	#include <string.h>
 	#include <stdlib.h>
+	#include "symtab.h"
 
 	#define TRUE 1
 	#define FALSE 0
@@ -16,6 +17,11 @@
 		char *name;
 		struct val_node *next;
 	};
+
+	struct sym_node{
+		symbol *sym;
+		struct sym_node *next;
+	};
 %}
 %code requires{
 	#include "symtab.h"
@@ -26,6 +32,7 @@
 	char *sval;
 	struct val_node *val_node_ptr;
 	symbol *symbol_ptr;
+	struct sym_node *sym_node_ptr;
 }
 %start program
 
@@ -37,7 +44,8 @@
 %type <ival> type standard_type
 %token <fval> FLOAT
 %type <val_node_ptr> identifier_list
-%type <symbol_ptr>  term factor variable expression simple_expression
+%type <symbol_ptr>  term factor variable expression simple_expression statement print_statement procedure_statement compound_statement if_statement while_statement for_statement
+%type <sym_node_ptr> statement_list
 %precedence DL_COLON
 %precedence KW_ELIF
 %precedence KW_ELSE
@@ -55,7 +63,7 @@ declarations:
 	declarations type identifier_list DL_SMCOLON	{
 		struct val_node *temp_node;
 		union_val value;
-		int arr_size = $2 / 2;
+		int arr_size = $2 / 2, loop;
 
 		for (temp_node=$3; temp_node; temp_node = temp_node->next){
 			if(sym_stack_is_full()){
@@ -67,10 +75,18 @@ declarations:
 				continue;
 			}
 			if (arr_size > 0){
-				if($2 % 2 == 0)
+				if($2 % 2 == 0){
 					value.iptr = (int *)malloc(sizeof(int) * arr_size);
-				else
+					for(loop = 0; loop < arr_size; loop++){
+						value.iptr[loop] = 0;
+					}
+					value.iptr[0] = 0;
+				}else{
 					value.fptr = (float *)malloc(sizeof(float) * arr_size);
+					for(loop = 0; loop < arr_size; loop++){
+						value.fptr[loop] = 0;
+					}
+				}
 			}else{
 				value = (union_val)0;
 			}
@@ -138,26 +154,36 @@ parameter_list:
 	;
 
 statement_list:
-	statement
-	| statement DL_SMCOLON statement_list
+	statement								{
+		struct sym_node *new = (struct sym_node *)malloc(sizeof(struct sym_node));
+		new->sym = $1;
+		new->next = NULL;
+		$$ = new;
+	}
+	| statement DL_SMCOLON statement_list	{
+		struct sym_node *new = (struct sym_node *)malloc(sizeof(struct sym_node));
+		new->sym = $1;
+		new->next = $3;
+		$$ = new;
+	}
 	;
 
 statement:
 	variable DL_ASSIGN expression	{
-		_type _type1 = _typeof($1), _type3 = _typeof($3);
+		_type _type1 = _typeof($1), _type2 = _typeof($3);
 
-		if(!_type1 || !_type3)
+		if(!_type1 || !_type2)
 			yyerror("value is invalid");
 		else if($1->sym != var || $3->sym != var)
 			yyerror("expression is invalid");
 		else if($1->type != $3->type){
-			if(_type1 == _int_elem && _type3 == _int)
+			if(_type1 == _int_elem && _type2 == _int)
 				*$1->value.iptr = $3->value.ival;
-			else if(_type1 == _float_elem && _type3 == _float)
+			else if(_type1 == _float_elem && _type2 == _float)
 				*$1->value.fptr = $3->value.fval;
-			else if(_type1 == _int && _type3 == _int_elem)
+			else if(_type1 == _int && _type2 == _int_elem)
 				$1->value.ival = *$3->value.iptr;
-			else if(_type1 == _float && _type3 == _float_elem)
+			else if(_type1 == _float && _type2 == _float_elem)
 				$1->value.fval = *$3->value.fptr;
 			else{
 				char *errmsg = "assigning to diffrent type.";
@@ -333,10 +359,7 @@ term:
 		$$ = $1;
 	}
 	| factor multop term	{
-		if(!$1 || !$3){
-			yyerror("invalid term.");
-			break;
-		}
+		_type _type1 = _typeof($1), _type2 = _typeof($3); 
 	}	
 	;
 
@@ -376,8 +399,6 @@ factor:
 				errmsg = strcat("type '", errmsg);
 				yyerror(errmsg);
 		}
-
-		free($1);		//free char *strdub()
 	}
 	| sign factor			{
 		symbol *ret, *null = NULL;
@@ -423,8 +444,6 @@ factor:
 		if($2)
 			if(!$2->name)
 				free($2);					//free temporary variable
-
-		free($1);							//free char *strdup()
 	}
 	;
 
@@ -456,7 +475,6 @@ multop:
 %%
 
 int main(int argc, char *argv[]){
-	//TODO All name string of tokens should be free because of strdup().
 	if (argc < 2){
 		fprintf(stderr, "파일이름을 입력해야 합니다.\n");
 		exit(1);
