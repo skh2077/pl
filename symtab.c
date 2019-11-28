@@ -1,21 +1,27 @@
 #include <string.h>
 #include "symtab.h"
+#define TRUE 1
+#define FALSE 0
 
 void init_stack(void){
 	top = -1;
 }
 
+int sym_stack_is_full(void){
+	return top < STACK_MAX - 1 ? FALSE : TRUE;
+}
+
 int push(char *_name, int _type, union_val _value, sym_type _sym){
-	if(top < STACK_MAX - 1){
+	if(!sym_stack_is_full()){
 		symbol new;
 		new.name = _name;
 		new.type = _type;
 		new.value = _value;
 		new.sym = _sym;
 		sym_stack[++top] = new;
-		return 0;
+		return TRUE;
 	}
-	return -1;
+	return FALSE;
 }
 
 symbol *pop(void){
@@ -38,13 +44,123 @@ symbol *search(char *_name){
 }
 
 void print_stack(void){
-	int loop=0;
+	int loop=top;
 	if (top<0){
 		printf("stack is empty\n");
 		return;
 	}
-	for(; loop<=top; loop++){
+	for(; loop>=0; loop--){
 		symbol sym = sym_stack[loop];
-		printf ("stack%d: %s value: %d\n", loop, sym.name, sym.value);
+		printf("stack %d -> %s : ", loop, sym.name);
+		print_sym(&sym);
+		printf("\n");
+	}
+}
+
+int8_t _typeof(symbol *_sym){
+	symbol sym;
+	if(!_sym)
+		return _NULL;
+
+	sym = *_sym;
+	switch(sym.sym){
+		case var:
+			if(sym.type % 2 == 0)
+				if(sym.type > 1)
+					if(!sym.name)
+						return _int_elem;		//int array element
+					else
+						return _int_arr;		//int array
+				else
+					return _int;				//int
+			else
+				if(sym.type > 1)
+					if(!sym.name)
+						return _float_elem;		//float array element
+					else
+						return _float_arr;		//float array
+				else
+					return _float;				//float
+		case boolean:
+			return sym.type ? _false : _true;	//? false : true
+		case proc:
+			return _proc;						//procedure
+		case func:
+			return _func;						//function
+		default:
+			return _unknown;					//unknown
+	}
+}
+void print_sym(symbol *sym){
+	int loop, arr_size;
+	switch(_typeof(sym)){
+		case _NULL:
+			printf("undefined");
+			return;
+		case _false:
+			printf("false");
+			return;
+		case _true:
+			printf("true");
+			return;
+		case _int:
+			printf("%d", sym->value.ival);
+			return;
+		case _float:
+			printf("%f", sym->value.fval);
+			return;
+		case _int_elem:
+			printf("%d", *sym->value.iptr);
+			return;
+		case _float_elem:
+			printf("%f", *sym->value.fptr);
+			return;
+		case _int_arr:
+			arr_size = sym->type / 2;
+
+			printf("[ ");
+			for(loop = 0; loop < arr_size-1; loop++)
+				printf("%d, ", sym->value.iptr[loop]);
+			printf("%d ]", sym->value.iptr[arr_size-1]);
+			return;
+		case _float_arr:
+			arr_size = sym->type / 2;
+			
+			printf("[ ");
+			for(loop = 0; loop < arr_size-1; loop++)
+				printf("%f, ", sym->value.fptr[loop]);
+			printf("%f ]", sym->value.fptr[arr_size-1]);
+			return;
+		case _proc:
+			printf("procedure");
+			return;
+		case _func:
+			printf("function");
+			return;
+		default:
+			printf("unknown type value");
+			return;
+	}
+}
+
+char *_typeof_str(symbol *sym){
+	switch(_typeof(sym)){
+		case _int:
+		case _int_elem:
+			return "int";
+		case _float:
+		case _float_elem:
+			return "float";
+		case _int_arr:
+		case _float_arr:
+			return "array";
+		case _proc:
+		case _func:
+			return "function";
+		case _true:
+		case _false:
+			return "boolean";
+		default:
+			return "unknown";
 	}
 }

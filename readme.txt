@@ -1,3 +1,1 @@
-bison example.y -d
-flex example.lex
-gcc -o result example.tab.c lex.yy.c -ll
+Modify Makefile depending on your OS.

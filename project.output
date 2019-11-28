@@ -11,7 +11,7 @@ Grammar
     1 program: %empty
     2        | KW_MAIN ID DL_SMCOLON declarations subprogram_declarations compound_statement
 
-    3 declarations: type identifier_list DL_SMCOLON declarations
+    3 declarations: declarations type identifier_list DL_SMCOLON
     4             | %empty
 
     5 subprogram_declarations: subprogram_declaration subprogram_declarations
@@ -173,7 +173,7 @@ Nonterminals, with rules where they appear
     subprogram_declarations (46)
         on left: 5 6
         on right: 2 5
-    compound_statement (47)
+    compound_statement <symbol_ptr> (47)
         on left: 7
         on right: 2 14 26
     type <ival> (48)
@@ -197,31 +197,31 @@ Nonterminals, with rules where they appear
     parameter_list (54)
         on left: 19 20
         on right: 17 20
-    statement_list (55)
+    statement_list <sym_node_ptr> (55)
         on left: 21 22
         on right: 7 22
-    statement (56)
+    statement <symbol_ptr> (56)
         on left: 23 24 25 26 27 28 29 30 31
         on right: 21 22 37 38 40 41 42 43 44
     variable <symbol_ptr> (57)
         on left: 32 33
         on right: 23 58
-    print_statement (58)
+    print_statement <symbol_ptr> (58)
         on left: 34 35
         on right: 24
-    procedure_statement (59)
+    procedure_statement <symbol_ptr> (59)
         on left: 36
         on right: 25 59
-    if_statement (60)
+    if_statement <symbol_ptr> (60)
         on left: 37 38
         on right: 27
     elif_statement (61)
         on left: 39 40
         on right: 37 38 40
-    while_statement (62)
+    while_statement <symbol_ptr> (62)
         on left: 41 42
         on right: 28
-    for_statement (63)
+    for_statement <symbol_ptr> (63)
         on left: 43 44
         on right: 29
     for_expression (64)
@@ -302,92 +302,92 @@ State 5
 
     2 program: KW_MAIN ID DL_SMCOLON . declarations subprogram_declarations compound_statement
 
-    KW_INT    shift, and go to state 6
-    KW_FLOAT  shift, and go to state 7
-
     $default  reduce using rule 4 (declarations)
 
-    declarations   go to state 8
-    type           go to state 9
-    standard_type  go to state 10
+    declarations  go to state 6
 
 
 State 6
+
+    2 program: KW_MAIN ID DL_SMCOLON declarations . subprogram_declarations compound_statement
+    3 declarations: declarations . type identifier_list DL_SMCOLON
+
+    KW_FUNC   shift, and go to state 7
+    KW_PROC   shift, and go to state 8
+    KW_INT    shift, and go to state 9
+    KW_FLOAT  shift, and go to state 10
+
+    $default  reduce using rule 6 (subprogram_declarations)
+
+    subprogram_declarations  go to state 11
+    type                     go to state 12
+    standard_type            go to state 13
+    subprogram_declaration   go to state 14
+    subprogram_head          go to state 15
+
+
+State 7
+
+   15 subprogram_head: KW_FUNC . ID arguments DL_COLON standard_type DL_SMCOLON
+
+    ID  shift, and go to state 16
+
+
+State 8
+
+   16 subprogram_head: KW_PROC . ID arguments DL_SMCOLON
+
+    ID  shift, and go to state 17
+
+
+State 9
 
    12 standard_type: KW_INT .
 
     $default  reduce using rule 12 (standard_type)
 
 
-State 7
+State 10
 
    13 standard_type: KW_FLOAT .
 
     $default  reduce using rule 13 (standard_type)
 
 
-State 8
-
-    2 program: KW_MAIN ID DL_SMCOLON declarations . subprogram_declarations compound_statement
-
-    KW_FUNC  shift, and go to state 11
-    KW_PROC  shift, and go to state 12
-
-    $default  reduce using rule 6 (subprogram_declarations)
-
-    subprogram_declarations  go to state 13
-    subprogram_declaration   go to state 14
-    subprogram_head          go to state 15
-
-
-State 9
-
-    3 declarations: type . identifier_list DL_SMCOLON declarations
-
-    ID  shift, and go to state 16
-
-    identifier_list  go to state 17
-
-
-State 10
-
-    8 type: standard_type .
-    9     | standard_type . DL_LBRACK INTEGER DL_RBRACK
-
-    DL_LBRACK  shift, and go to state 18
-
-    $default  reduce using rule 8 (type)
-
-
 State 11
 
-   15 subprogram_head: KW_FUNC . ID arguments DL_COLON standard_type DL_SMCOLON
+    2 program: KW_MAIN ID DL_SMCOLON declarations subprogram_declarations . compound_statement
 
-    ID  shift, and go to state 19
+    KW_BEGIN  shift, and go to state 18
+
+    compound_statement  go to state 19
 
 
 State 12
 
-   16 subprogram_head: KW_PROC . ID arguments DL_SMCOLON
+    3 declarations: declarations type . identifier_list DL_SMCOLON
 
     ID  shift, and go to state 20
+
+    identifier_list  go to state 21
 
 
 State 13
 
-    2 program: KW_MAIN ID DL_SMCOLON declarations subprogram_declarations . compound_statement
+    8 type: standard_type .
+    9     | standard_type . DL_LBRACK INTEGER DL_RBRACK
 
-    KW_BEGIN  shift, and go to state 21
+    DL_LBRACK  shift, and go to state 22
 
-    compound_statement  go to state 22
+    $default  reduce using rule 8 (type)
 
 
 State 14
 
     5 subprogram_declarations: subprogram_declaration . subprogram_declarations
 
-    KW_FUNC  shift, and go to state 11
-    KW_PROC  shift, and go to state 12
+    KW_FUNC  shift, and go to state 7
+    KW_PROC  shift, and go to state 8
 
     $default  reduce using rule 6 (subprogram_declarations)
 
@@ -400,91 +400,86 @@ State 15
 
    14 subprogram_declaration: subprogram_head . declarations compound_statement
 
-    KW_INT    shift, and go to state 6
-    KW_FLOAT  shift, and go to state 7
-
     $default  reduce using rule 4 (declarations)
 
-    declarations   go to state 24
-    type           go to state 9
-    standard_type  go to state 10
+    declarations  go to state 24
 
 
 State 16
 
-   10 identifier_list: ID .
-   11                | ID . DL_COMMA identifier_list
+   15 subprogram_head: KW_FUNC ID . arguments DL_COLON standard_type DL_SMCOLON
 
-    DL_COMMA  shift, and go to state 25
+    DL_LPAREN  shift, and go to state 25
 
-    $default  reduce using rule 10 (identifier_list)
+    $default  reduce using rule 18 (arguments)
+
+    arguments  go to state 26
 
 
 State 17
 
-    3 declarations: type identifier_list . DL_SMCOLON declarations
+   16 subprogram_head: KW_PROC ID . arguments DL_SMCOLON
 
-    DL_SMCOLON  shift, and go to state 26
+    DL_LPAREN  shift, and go to state 25
+
+    $default  reduce using rule 18 (arguments)
+
+    arguments  go to state 27
 
 
 State 18
 
-    9 type: standard_type DL_LBRACK . INTEGER DL_RBRACK
+    7 compound_statement: KW_BEGIN . statement_list KW_END
 
-    INTEGER  shift, and go to state 27
+    ID         shift, and go to state 28
+    KW_BEGIN   shift, and go to state 18
+    KW_IF      shift, and go to state 29
+    KW_NOP     shift, and go to state 30
+    KW_FOR     shift, and go to state 31
+    KW_WHILE   shift, and go to state 32
+    KW_RETURN  shift, and go to state 33
+    KW_PRINT   shift, and go to state 34
+
+    compound_statement   go to state 35
+    statement_list       go to state 36
+    statement            go to state 37
+    variable             go to state 38
+    print_statement      go to state 39
+    procedure_statement  go to state 40
+    if_statement         go to state 41
+    while_statement      go to state 42
+    for_statement        go to state 43
 
 
 State 19
 
-   15 subprogram_head: KW_FUNC ID . arguments DL_COLON standard_type DL_SMCOLON
+    2 program: KW_MAIN ID DL_SMCOLON declarations subprogram_declarations compound_statement .
 
-    DL_LPAREN  shift, and go to state 28
-
-    $default  reduce using rule 18 (arguments)
-
-    arguments  go to state 29
+    $default  reduce using rule 2 (program)
 
 
 State 20
 
-   16 subprogram_head: KW_PROC ID . arguments DL_SMCOLON
+   10 identifier_list: ID .
+   11                | ID . DL_COMMA identifier_list
 
-    DL_LPAREN  shift, and go to state 28
+    DL_COMMA  shift, and go to state 44
 
-    $default  reduce using rule 18 (arguments)
-
-    arguments  go to state 30
+    $default  reduce using rule 10 (identifier_list)
 
 
 State 21
 
-    7 compound_statement: KW_BEGIN . statement_list KW_END
+    3 declarations: declarations type identifier_list . DL_SMCOLON
 
-    ID         shift, and go to state 31
-    KW_BEGIN   shift, and go to state 21
-    KW_IF      shift, and go to state 32
-    KW_NOP     shift, and go to state 33
-    KW_FOR     shift, and go to state 34
-    KW_WHILE   shift, and go to state 35
-    KW_RETURN  shift, and go to state 36
-    KW_PRINT   shift, and go to state 37
-
-    compound_statement   go to state 38
-    statement_list       go to state 39
-    statement            go to state 40
-    variable             go to state 41
-    print_statement      go to state 42
-    procedure_statement  go to state 43
-    if_statement         go to state 44
-    while_statement      go to state 45
-    for_statement        go to state 46
+    DL_SMCOLON  shift, and go to state 45
 
 
 State 22
 
-    2 program: KW_MAIN ID DL_SMCOLON declarations subprogram_declarations compound_statement .
+    9 type: standard_type DL_LBRACK . INTEGER DL_RBRACK
 
-    $default  reduce using rule 2 (program)
+    INTEGER  shift, and go to state 46
 
 
 State 23
@@ -496,243 +491,241 @@ State 23
 
 State 24
 
+    3 declarations: declarations . type identifier_list DL_SMCOLON
    14 subprogram_declaration: subprogram_head declarations . compound_statement
 
-    KW_BEGIN  shift, and go to state 21
+    KW_BEGIN  shift, and go to state 18
+    KW_INT    shift, and go to state 9
+    KW_FLOAT  shift, and go to state 10
 
     compound_statement  go to state 47
+    type                go to state 12
+    standard_type       go to state 13
 
 
 State 25
 
-   11 identifier_list: ID DL_COMMA . identifier_list
+   17 arguments: DL_LPAREN . parameter_list DL_RPAREN
 
-    ID  shift, and go to state 16
+    ID  shift, and go to state 20
 
     identifier_list  go to state 48
+    parameter_list   go to state 49
 
 
 State 26
 
-    3 declarations: type identifier_list DL_SMCOLON . declarations
+   15 subprogram_head: KW_FUNC ID arguments . DL_COLON standard_type DL_SMCOLON
 
-    KW_INT    shift, and go to state 6
-    KW_FLOAT  shift, and go to state 7
-
-    $default  reduce using rule 4 (declarations)
-
-    declarations   go to state 49
-    type           go to state 9
-    standard_type  go to state 10
+    DL_COLON  shift, and go to state 50
 
 
 State 27
 
-    9 type: standard_type DL_LBRACK INTEGER . DL_RBRACK
+   16 subprogram_head: KW_PROC ID arguments . DL_SMCOLON
 
-    DL_RBRACK  shift, and go to state 50
+    DL_SMCOLON  shift, and go to state 51
 
 
 State 28
-
-   17 arguments: DL_LPAREN . parameter_list DL_RPAREN
-
-    ID  shift, and go to state 16
-
-    identifier_list  go to state 51
-    parameter_list   go to state 52
-
-
-State 29
-
-   15 subprogram_head: KW_FUNC ID arguments . DL_COLON standard_type DL_SMCOLON
-
-    DL_COLON  shift, and go to state 53
-
-
-State 30
-
-   16 subprogram_head: KW_PROC ID arguments . DL_SMCOLON
-
-    DL_SMCOLON  shift, and go to state 54
-
-
-State 31
 
    32 variable: ID .
    33         | ID . DL_LBRACK expression DL_RBRACK
    36 procedure_statement: ID . DL_LPAREN actual_parameter_expression DL_RPAREN
 
-    DL_LPAREN  shift, and go to state 55
-    DL_LBRACK  shift, and go to state 56
+    DL_LPAREN  shift, and go to state 52
+    DL_LBRACK  shift, and go to state 53
 
     $default  reduce using rule 32 (variable)
 
 
-State 32
+State 29
 
    37 if_statement: KW_IF . expression DL_COLON statement elif_statement
    38             | KW_IF . expression DL_COLON statement elif_statement KW_ELSE DL_COLON statement
 
-    ID       shift, and go to state 31
-    OP_ADD   shift, and go to state 57
-    OP_SUB   shift, and go to state 58
-    OP_NEG   shift, and go to state 59
-    INTEGER  shift, and go to state 60
-    FLOAT    shift, and go to state 61
+    ID       shift, and go to state 28
+    OP_ADD   shift, and go to state 54
+    OP_SUB   shift, and go to state 55
+    OP_NEG   shift, and go to state 56
+    INTEGER  shift, and go to state 57
+    FLOAT    shift, and go to state 58
 
-    variable             go to state 62
-    procedure_statement  go to state 63
-    expression           go to state 64
-    simple_expression    go to state 65
-    term                 go to state 66
-    factor               go to state 67
-    sign                 go to state 68
+    variable             go to state 59
+    procedure_statement  go to state 60
+    expression           go to state 61
+    simple_expression    go to state 62
+    term                 go to state 63
+    factor               go to state 64
+    sign                 go to state 65
 
 
-State 33
+State 30
 
    31 statement: KW_NOP .
 
     $default  reduce using rule 31 (statement)
 
 
-State 34
+State 31
 
    43 for_statement: KW_FOR . for_expression KW_IN for_expression DL_COLON statement KW_ELSE DL_COLON statement
    44              | KW_FOR . for_expression KW_IN for_expression DL_COLON statement
 
-    ID       shift, and go to state 31
-    OP_ADD   shift, and go to state 57
-    OP_SUB   shift, and go to state 58
-    OP_NEG   shift, and go to state 59
-    INTEGER  shift, and go to state 60
-    FLOAT    shift, and go to state 61
+    ID       shift, and go to state 28
+    OP_ADD   shift, and go to state 54
+    OP_SUB   shift, and go to state 55
+    OP_NEG   shift, and go to state 56
+    INTEGER  shift, and go to state 57
+    FLOAT    shift, and go to state 58
 
-    variable             go to state 62
-    procedure_statement  go to state 63
-    for_expression       go to state 69
-    simple_expression    go to state 70
-    term                 go to state 66
-    factor               go to state 67
-    sign                 go to state 68
+    variable             go to state 59
+    procedure_statement  go to state 60
+    for_expression       go to state 66
+    simple_expression    go to state 67
+    term                 go to state 63
+    factor               go to state 64
+    sign                 go to state 65
 
 
-State 35
+State 32
 
    41 while_statement: KW_WHILE . expression DL_COLON statement
    42                | KW_WHILE . expression DL_COLON statement KW_ELSE DL_COLON statement
 
-    ID       shift, and go to state 31
-    OP_ADD   shift, and go to state 57
-    OP_SUB   shift, and go to state 58
-    OP_NEG   shift, and go to state 59
-    INTEGER  shift, and go to state 60
-    FLOAT    shift, and go to state 61
+    ID       shift, and go to state 28
+    OP_ADD   shift, and go to state 54
+    OP_SUB   shift, and go to state 55
+    OP_NEG   shift, and go to state 56
+    INTEGER  shift, and go to state 57
+    FLOAT    shift, and go to state 58
 
-    variable             go to state 62
-    procedure_statement  go to state 63
-    expression           go to state 71
-    simple_expression    go to state 65
-    term                 go to state 66
-    factor               go to state 67
-    sign                 go to state 68
+    variable             go to state 59
+    procedure_statement  go to state 60
+    expression           go to state 68
+    simple_expression    go to state 62
+    term                 go to state 63
+    factor               go to state 64
+    sign                 go to state 65
 
 
-State 36
+State 33
 
    30 statement: KW_RETURN . expression
 
-    ID       shift, and go to state 31
-    OP_ADD   shift, and go to state 57
-    OP_SUB   shift, and go to state 58
-    OP_NEG   shift, and go to state 59
-    INTEGER  shift, and go to state 60
-    FLOAT    shift, and go to state 61
+    ID       shift, and go to state 28
+    OP_ADD   shift, and go to state 54
+    OP_SUB   shift, and go to state 55
+    OP_NEG   shift, and go to state 56
+    INTEGER  shift, and go to state 57
+    FLOAT    shift, and go to state 58
 
-    variable             go to state 62
-    procedure_statement  go to state 63
-    expression           go to state 72
-    simple_expression    go to state 65
-    term                 go to state 66
-    factor               go to state 67
-    sign                 go to state 68
+    variable             go to state 59
+    procedure_statement  go to state 60
+    expression           go to state 69
+    simple_expression    go to state 62
+    term                 go to state 63
+    factor               go to state 64
+    sign                 go to state 65
 
 
-State 37
+State 34
 
    34 print_statement: KW_PRINT .
    35                | KW_PRINT . DL_LPAREN expression DL_RPAREN
 
-    DL_LPAREN  shift, and go to state 73
+    DL_LPAREN  shift, and go to state 70
 
     $default  reduce using rule 34 (print_statement)
 
 
-State 38
+State 35
 
    26 statement: compound_statement .
 
     $default  reduce using rule 26 (statement)
 
 
-State 39
+State 36
 
     7 compound_statement: KW_BEGIN statement_list . KW_END
 
-    KW_END  shift, and go to state 74
+    KW_END  shift, and go to state 71
 
 
-State 40
+State 37
 
    21 statement_list: statement .
    22               | statement . DL_SMCOLON statement_list
 
-    DL_SMCOLON  shift, and go to state 75
+    DL_SMCOLON  shift, and go to state 72
 
     $default  reduce using rule 21 (statement_list)
 
 
-State 41
+State 38
 
    23 statement: variable . DL_ASSIGN expression
 
-    DL_ASSIGN  shift, and go to state 76
+    DL_ASSIGN  shift, and go to state 73
 
 
-State 42
+State 39
 
    24 statement: print_statement .
 
     $default  reduce using rule 24 (statement)
 
 
-State 43
+State 40
 
    25 statement: procedure_statement .
 
     $default  reduce using rule 25 (statement)
 
 
-State 44
+State 41
 
    27 statement: if_statement .
 
     $default  reduce using rule 27 (statement)
 
 
-State 45
+State 42
 
    28 statement: while_statement .
 
     $default  reduce using rule 28 (statement)
 
 
-State 46
+State 43
 
    29 statement: for_statement .
 
     $default  reduce using rule 29 (statement)
+
+
+State 44
+
+   11 identifier_list: ID DL_COMMA . identifier_list
+
+    ID  shift, and go to state 20
+
+    identifier_list  go to state 74
+
+
+State 45
+
+    3 declarations: declarations type identifier_list DL_SMCOLON .
+
+    $default  reduce using rule 3 (declarations)
+
+
+State 46
+
+    9 type: standard_type DL_LBRACK INTEGER . DL_RBRACK
+
+    DL_RBRACK  shift, and go to state 75
 
 
 State 47
@@ -744,964 +737,957 @@ State 47
 
 State 48
 
-   11 identifier_list: ID DL_COMMA identifier_list .
+   19 parameter_list: identifier_list . DL_COLON type
+   20               | identifier_list . DL_COLON type DL_SMCOLON parameter_list
 
-    $default  reduce using rule 11 (identifier_list)
+    DL_COLON  shift, and go to state 76
 
 
 State 49
 
-    3 declarations: type identifier_list DL_SMCOLON declarations .
+   17 arguments: DL_LPAREN parameter_list . DL_RPAREN
 
-    $default  reduce using rule 3 (declarations)
+    DL_RPAREN  shift, and go to state 77
 
 
 State 50
 
-    9 type: standard_type DL_LBRACK INTEGER DL_RBRACK .
+   15 subprogram_head: KW_FUNC ID arguments DL_COLON . standard_type DL_SMCOLON
 
-    $default  reduce using rule 9 (type)
+    KW_INT    shift, and go to state 9
+    KW_FLOAT  shift, and go to state 10
+
+    standard_type  go to state 78
 
 
 State 51
-
-   19 parameter_list: identifier_list . DL_COLON type
-   20               | identifier_list . DL_COLON type DL_SMCOLON parameter_list
-
-    DL_COLON  shift, and go to state 77
-
-
-State 52
-
-   17 arguments: DL_LPAREN parameter_list . DL_RPAREN
-
-    DL_RPAREN  shift, and go to state 78
-
-
-State 53
-
-   15 subprogram_head: KW_FUNC ID arguments DL_COLON . standard_type DL_SMCOLON
-
-    KW_INT    shift, and go to state 6
-    KW_FLOAT  shift, and go to state 7
-
-    standard_type  go to state 79
-
-
-State 54
 
    16 subprogram_head: KW_PROC ID arguments DL_SMCOLON .
 
     $default  reduce using rule 16 (subprogram_head)
 
 
-State 55
+State 52
 
    36 procedure_statement: ID DL_LPAREN . actual_parameter_expression DL_RPAREN
 
-    ID       shift, and go to state 31
-    OP_ADD   shift, and go to state 57
-    OP_SUB   shift, and go to state 58
-    OP_NEG   shift, and go to state 59
-    INTEGER  shift, and go to state 60
-    FLOAT    shift, and go to state 61
+    ID       shift, and go to state 28
+    OP_ADD   shift, and go to state 54
+    OP_SUB   shift, and go to state 55
+    OP_NEG   shift, and go to state 56
+    INTEGER  shift, and go to state 57
+    FLOAT    shift, and go to state 58
 
     $default  reduce using rule 46 (actual_parameter_expression)
 
-    variable                     go to state 62
-    procedure_statement          go to state 63
-    actual_parameter_expression  go to state 80
-    expression_list              go to state 81
-    expression                   go to state 82
-    simple_expression            go to state 65
-    term                         go to state 66
-    factor                       go to state 67
-    sign                         go to state 68
+    variable                     go to state 59
+    procedure_statement          go to state 60
+    actual_parameter_expression  go to state 79
+    expression_list              go to state 80
+    expression                   go to state 81
+    simple_expression            go to state 62
+    term                         go to state 63
+    factor                       go to state 64
+    sign                         go to state 65
 
 
-State 56
+State 53
 
    33 variable: ID DL_LBRACK . expression DL_RBRACK
 
-    ID       shift, and go to state 31
-    OP_ADD   shift, and go to state 57
-    OP_SUB   shift, and go to state 58
-    OP_NEG   shift, and go to state 59
-    INTEGER  shift, and go to state 60
-    FLOAT    shift, and go to state 61
+    ID       shift, and go to state 28
+    OP_ADD   shift, and go to state 54
+    OP_SUB   shift, and go to state 55
+    OP_NEG   shift, and go to state 56
+    INTEGER  shift, and go to state 57
+    FLOAT    shift, and go to state 58
 
-    variable             go to state 62
-    procedure_statement  go to state 63
-    expression           go to state 83
-    simple_expression    go to state 65
-    term                 go to state 66
-    factor               go to state 67
-    sign                 go to state 68
+    variable             go to state 59
+    procedure_statement  go to state 60
+    expression           go to state 82
+    simple_expression    go to state 62
+    term                 go to state 63
+    factor               go to state 64
+    sign                 go to state 65
 
 
-State 57
+State 54
 
    62 sign: OP_ADD .
 
     $default  reduce using rule 62 (sign)
 
 
-State 58
+State 55
 
    63 sign: OP_SUB .
 
     $default  reduce using rule 63 (sign)
 
 
-State 59
+State 56
 
    60 factor: OP_NEG . factor
 
-    ID       shift, and go to state 31
-    OP_ADD   shift, and go to state 57
-    OP_SUB   shift, and go to state 58
-    OP_NEG   shift, and go to state 59
-    INTEGER  shift, and go to state 60
-    FLOAT    shift, and go to state 61
+    ID       shift, and go to state 28
+    OP_ADD   shift, and go to state 54
+    OP_SUB   shift, and go to state 55
+    OP_NEG   shift, and go to state 56
+    INTEGER  shift, and go to state 57
+    FLOAT    shift, and go to state 58
 
-    variable             go to state 62
-    procedure_statement  go to state 63
-    factor               go to state 84
-    sign                 go to state 68
+    variable             go to state 59
+    procedure_statement  go to state 60
+    factor               go to state 83
+    sign                 go to state 65
 
 
-State 60
+State 57
 
    56 factor: INTEGER .
 
     $default  reduce using rule 56 (factor)
 
 
-State 61
+State 58
 
    57 factor: FLOAT .
 
     $default  reduce using rule 57 (factor)
 
 
-State 62
+State 59
 
    58 factor: variable .
 
     $default  reduce using rule 58 (factor)
 
 
-State 63
+State 60
 
    59 factor: procedure_statement .
 
     $default  reduce using rule 59 (factor)
 
 
-State 64
+State 61
 
    37 if_statement: KW_IF expression . DL_COLON statement elif_statement
    38             | KW_IF expression . DL_COLON statement elif_statement KW_ELSE DL_COLON statement
 
-    DL_COLON  shift, and go to state 85
+    DL_COLON  shift, and go to state 84
 
 
-State 65
+State 62
 
    50 expression: simple_expression .
    51           | simple_expression . relop simple_expression
 
-    KW_IN     shift, and go to state 86
-    OP_LT     shift, and go to state 87
-    OP_LE     shift, and go to state 88
-    OP_GT     shift, and go to state 89
-    OP_GE     shift, and go to state 90
-    OP_EQUAL  shift, and go to state 91
-    OP_NOTEQ  shift, and go to state 92
+    KW_IN     shift, and go to state 85
+    OP_LT     shift, and go to state 86
+    OP_LE     shift, and go to state 87
+    OP_GT     shift, and go to state 88
+    OP_GE     shift, and go to state 89
+    OP_EQUAL  shift, and go to state 90
+    OP_NOTEQ  shift, and go to state 91
 
     $default  reduce using rule 50 (expression)
 
-    relop  go to state 93
+    relop  go to state 92
 
 
-State 66
+State 63
 
    52 simple_expression: term .
    53                  | term . addop simple_expression
 
-    OP_ADD  shift, and go to state 94
-    OP_SUB  shift, and go to state 95
+    OP_ADD  shift, and go to state 93
+    OP_SUB  shift, and go to state 94
 
     $default  reduce using rule 52 (simple_expression)
 
-    addop  go to state 96
+    addop  go to state 95
 
 
-State 67
+State 64
 
    54 term: factor .
    55     | factor . multop term
 
-    OP_MUL  shift, and go to state 97
-    OP_DIV  shift, and go to state 98
+    OP_MUL  shift, and go to state 96
+    OP_DIV  shift, and go to state 97
 
     $default  reduce using rule 54 (term)
 
-    multop  go to state 99
+    multop  go to state 98
 
 
-State 68
+State 65
 
    61 factor: sign . factor
 
-    ID       shift, and go to state 31
-    OP_ADD   shift, and go to state 57
-    OP_SUB   shift, and go to state 58
-    OP_NEG   shift, and go to state 59
-    INTEGER  shift, and go to state 60
-    FLOAT    shift, and go to state 61
+    ID       shift, and go to state 28
+    OP_ADD   shift, and go to state 54
+    OP_SUB   shift, and go to state 55
+    OP_NEG   shift, and go to state 56
+    INTEGER  shift, and go to state 57
+    FLOAT    shift, and go to state 58
 
-    variable             go to state 62
-    procedure_statement  go to state 63
-    factor               go to state 100
-    sign                 go to state 68
+    variable             go to state 59
+    procedure_statement  go to state 60
+    factor               go to state 99
+    sign                 go to state 65
 
 
-State 69
+State 66
 
    43 for_statement: KW_FOR for_expression . KW_IN for_expression DL_COLON statement KW_ELSE DL_COLON statement
    44              | KW_FOR for_expression . KW_IN for_expression DL_COLON statement
 
-    KW_IN  shift, and go to state 101
+    KW_IN  shift, and go to state 100
 
 
-State 70
+State 67
 
    45 for_expression: simple_expression .
 
     $default  reduce using rule 45 (for_expression)
 
 
-State 71
+State 68
 
    41 while_statement: KW_WHILE expression . DL_COLON statement
    42                | KW_WHILE expression . DL_COLON statement KW_ELSE DL_COLON statement
 
-    DL_COLON  shift, and go to state 102
+    DL_COLON  shift, and go to state 101
 
 
-State 72
+State 69
 
    30 statement: KW_RETURN expression .
 
     $default  reduce using rule 30 (statement)
 
 
-State 73
+State 70
 
    35 print_statement: KW_PRINT DL_LPAREN . expression DL_RPAREN
 
-    ID       shift, and go to state 31
-    OP_ADD   shift, and go to state 57
-    OP_SUB   shift, and go to state 58
-    OP_NEG   shift, and go to state 59
-    INTEGER  shift, and go to state 60
-    FLOAT    shift, and go to state 61
+    ID       shift, and go to state 28
+    OP_ADD   shift, and go to state 54
+    OP_SUB   shift, and go to state 55
+    OP_NEG   shift, and go to state 56
+    INTEGER  shift, and go to state 57
+    FLOAT    shift, and go to state 58
 
-    variable             go to state 62
-    procedure_statement  go to state 63
-    expression           go to state 103
-    simple_expression    go to state 65
-    term                 go to state 66
-    factor               go to state 67
-    sign                 go to state 68
+    variable             go to state 59
+    procedure_statement  go to state 60
+    expression           go to state 102
+    simple_expression    go to state 62
+    term                 go to state 63
+    factor               go to state 64
+    sign                 go to state 65
 
 
-State 74
+State 71
 
     7 compound_statement: KW_BEGIN statement_list KW_END .
 
     $default  reduce using rule 7 (compound_statement)
 
 
-State 75
+State 72
 
    22 statement_list: statement DL_SMCOLON . statement_list
 
-    ID         shift, and go to state 31
-    KW_BEGIN   shift, and go to state 21
-    KW_IF      shift, and go to state 32
-    KW_NOP     shift, and go to state 33
-    KW_FOR     shift, and go to state 34
-    KW_WHILE   shift, and go to state 35
-    KW_RETURN  shift, and go to state 36
-    KW_PRINT   shift, and go to state 37
+    ID         shift, and go to state 28
+    KW_BEGIN   shift, and go to state 18
+    KW_IF      shift, and go to state 29
+    KW_NOP     shift, and go to state 30
+    KW_FOR     shift, and go to state 31
+    KW_WHILE   shift, and go to state 32
+    KW_RETURN  shift, and go to state 33
+    KW_PRINT   shift, and go to state 34
 
-    compound_statement   go to state 38
-    statement_list       go to state 104
-    statement            go to state 40
-    variable             go to state 41
-    print_statement      go to state 42
-    procedure_statement  go to state 43
-    if_statement         go to state 44
-    while_statement      go to state 45
-    for_statement        go to state 46
+    compound_statement   go to state 35
+    statement_list       go to state 103
+    statement            go to state 37
+    variable             go to state 38
+    print_statement      go to state 39
+    procedure_statement  go to state 40
+    if_statement         go to state 41
+    while_statement      go to state 42
+    for_statement        go to state 43
+
+
+State 73
+
+   23 statement: variable DL_ASSIGN . expression
+
+    ID       shift, and go to state 28
+    OP_ADD   shift, and go to state 54
+    OP_SUB   shift, and go to state 55
+    OP_NEG   shift, and go to state 56
+    INTEGER  shift, and go to state 57
+    FLOAT    shift, and go to state 58
+
+    variable             go to state 59
+    procedure_statement  go to state 60
+    expression           go to state 104
+    simple_expression    go to state 62
+    term                 go to state 63
+    factor               go to state 64
+    sign                 go to state 65
+
+
+State 74
+
+   11 identifier_list: ID DL_COMMA identifier_list .
+
+    $default  reduce using rule 11 (identifier_list)
+
+
+State 75
+
+    9 type: standard_type DL_LBRACK INTEGER DL_RBRACK .
+
+    $default  reduce using rule 9 (type)
 
 
 State 76
 
-   23 statement: variable DL_ASSIGN . expression
-
-    ID       shift, and go to state 31
-    OP_ADD   shift, and go to state 57
-    OP_SUB   shift, and go to state 58
-    OP_NEG   shift, and go to state 59
-    INTEGER  shift, and go to state 60
-    FLOAT    shift, and go to state 61
-
-    variable             go to state 62
-    procedure_statement  go to state 63
-    expression           go to state 105
-    simple_expression    go to state 65
-    term                 go to state 66
-    factor               go to state 67
-    sign                 go to state 68
-
-
-State 77
-
    19 parameter_list: identifier_list DL_COLON . type
    20               | identifier_list DL_COLON . type DL_SMCOLON parameter_list
 
-    KW_INT    shift, and go to state 6
-    KW_FLOAT  shift, and go to state 7
+    KW_INT    shift, and go to state 9
+    KW_FLOAT  shift, and go to state 10
 
-    type           go to state 106
-    standard_type  go to state 10
+    type           go to state 105
+    standard_type  go to state 13
 
 
-State 78
+State 77
 
    17 arguments: DL_LPAREN parameter_list DL_RPAREN .
 
     $default  reduce using rule 17 (arguments)
 
 
-State 79
+State 78
 
    15 subprogram_head: KW_FUNC ID arguments DL_COLON standard_type . DL_SMCOLON
 
-    DL_SMCOLON  shift, and go to state 107
+    DL_SMCOLON  shift, and go to state 106
 
 
-State 80
+State 79
 
    36 procedure_statement: ID DL_LPAREN actual_parameter_expression . DL_RPAREN
 
-    DL_RPAREN  shift, and go to state 108
+    DL_RPAREN  shift, and go to state 107
 
 
-State 81
+State 80
 
    47 actual_parameter_expression: expression_list .
 
     $default  reduce using rule 47 (actual_parameter_expression)
 
 
-State 82
+State 81
 
    48 expression_list: expression .
    49                | expression . DL_COMMA expression_list
 
-    DL_COMMA  shift, and go to state 109
+    DL_COMMA  shift, and go to state 108
 
     $default  reduce using rule 48 (expression_list)
 
 
-State 83
+State 82
 
    33 variable: ID DL_LBRACK expression . DL_RBRACK
 
-    DL_RBRACK  shift, and go to state 110
+    DL_RBRACK  shift, and go to state 109
 
 
-State 84
+State 83
 
    60 factor: OP_NEG factor .
 
     $default  reduce using rule 60 (factor)
 
 
-State 85
+State 84
 
    37 if_statement: KW_IF expression DL_COLON . statement elif_statement
    38             | KW_IF expression DL_COLON . statement elif_statement KW_ELSE DL_COLON statement
 
-    ID         shift, and go to state 31
-    KW_BEGIN   shift, and go to state 21
-    KW_IF      shift, and go to state 32
-    KW_NOP     shift, and go to state 33
-    KW_FOR     shift, and go to state 34
-    KW_WHILE   shift, and go to state 35
-    KW_RETURN  shift, and go to state 36
-    KW_PRINT   shift, and go to state 37
+    ID         shift, and go to state 28
+    KW_BEGIN   shift, and go to state 18
+    KW_IF      shift, and go to state 29
+    KW_NOP     shift, and go to state 30
+    KW_FOR     shift, and go to state 31
+    KW_WHILE   shift, and go to state 32
+    KW_RETURN  shift, and go to state 33
+    KW_PRINT   shift, and go to state 34
 
-    compound_statement   go to state 38
-    statement            go to state 111
-    variable             go to state 41
-    print_statement      go to state 42
-    procedure_statement  go to state 43
-    if_statement         go to state 44
-    while_statement      go to state 45
-    for_statement        go to state 46
+    compound_statement   go to state 35
+    statement            go to state 110
+    variable             go to state 38
+    print_statement      go to state 39
+    procedure_statement  go to state 40
+    if_statement         go to state 41
+    while_statement      go to state 42
+    for_statement        go to state 43
 
 
-State 86
+State 85
 
    70 relop: KW_IN .
 
     $default  reduce using rule 70 (relop)
 
 
-State 87
+State 86
 
    66 relop: OP_LT .
 
     $default  reduce using rule 66 (relop)
 
 
-State 88
+State 87
 
    67 relop: OP_LE .
 
     $default  reduce using rule 67 (relop)
 
 
-State 89
+State 88
 
    64 relop: OP_GT .
 
     $default  reduce using rule 64 (relop)
 
 
-State 90
+State 89
 
    65 relop: OP_GE .
 
     $default  reduce using rule 65 (relop)
 
 
-State 91
+State 90
 
    68 relop: OP_EQUAL .
 
     $default  reduce using rule 68 (relop)
 
 
-State 92
+State 91
 
    69 relop: OP_NOTEQ .
 
     $default  reduce using rule 69 (relop)
 
 
-State 93
+State 92
 
    51 expression: simple_expression relop . simple_expression
 
-    ID       shift, and go to state 31
-    OP_ADD   shift, and go to state 57
-    OP_SUB   shift, and go to state 58
-    OP_NEG   shift, and go to state 59
-    INTEGER  shift, and go to state 60
-    FLOAT    shift, and go to state 61
+    ID       shift, and go to state 28
+    OP_ADD   shift, and go to state 54
+    OP_SUB   shift, and go to state 55
+    OP_NEG   shift, and go to state 56
+    INTEGER  shift, and go to state 57
+    FLOAT    shift, and go to state 58
 
-    variable             go to state 62
-    procedure_statement  go to state 63
-    simple_expression    go to state 112
-    term                 go to state 66
-    factor               go to state 67
-    sign                 go to state 68
+    variable             go to state 59
+    procedure_statement  go to state 60
+    simple_expression    go to state 111
+    term                 go to state 63
+    factor               go to state 64
+    sign                 go to state 65
 
 
-State 94
+State 93
 
    71 addop: OP_ADD .
 
     $default  reduce using rule 71 (addop)
 
 
-State 95
+State 94
 
    72 addop: OP_SUB .
 
     $default  reduce using rule 72 (addop)
 
 
-State 96
+State 95
 
    53 simple_expression: term addop . simple_expression
 
-    ID       shift, and go to state 31
-    OP_ADD   shift, and go to state 57
-    OP_SUB   shift, and go to state 58
-    OP_NEG   shift, and go to state 59
-    INTEGER  shift, and go to state 60
-    FLOAT    shift, and go to state 61
+    ID       shift, and go to state 28
+    OP_ADD   shift, and go to state 54
+    OP_SUB   shift, and go to state 55
+    OP_NEG   shift, and go to state 56
+    INTEGER  shift, and go to state 57
+    FLOAT    shift, and go to state 58
 
-    variable             go to state 62
-    procedure_statement  go to state 63
-    simple_expression    go to state 113
-    term                 go to state 66
-    factor               go to state 67
-    sign                 go to state 68
+    variable             go to state 59
+    procedure_statement  go to state 60
+    simple_expression    go to state 112
+    term                 go to state 63
+    factor               go to state 64
+    sign                 go to state 65
 
 
-State 97
+State 96
 
    73 multop: OP_MUL .
 
     $default  reduce using rule 73 (multop)
 
 
-State 98
+State 97
 
    74 multop: OP_DIV .
 
     $default  reduce using rule 74 (multop)
 
 
-State 99
+State 98
 
    55 term: factor multop . term
 
-    ID       shift, and go to state 31
-    OP_ADD   shift, and go to state 57
-    OP_SUB   shift, and go to state 58
-    OP_NEG   shift, and go to state 59
-    INTEGER  shift, and go to state 60
-    FLOAT    shift, and go to state 61
+    ID       shift, and go to state 28
+    OP_ADD   shift, and go to state 54
+    OP_SUB   shift, and go to state 55
+    OP_NEG   shift, and go to state 56
+    INTEGER  shift, and go to state 57
+    FLOAT    shift, and go to state 58
 
-    variable             go to state 62
-    procedure_statement  go to state 63
-    term                 go to state 114
-    factor               go to state 67
-    sign                 go to state 68
+    variable             go to state 59
+    procedure_statement  go to state 60
+    term                 go to state 113
+    factor               go to state 64
+    sign                 go to state 65
 
 
-State 100
+State 99
 
    61 factor: sign factor .
 
     $default  reduce using rule 61 (factor)
 
 
-State 101
+State 100
 
    43 for_statement: KW_FOR for_expression KW_IN . for_expression DL_COLON statement KW_ELSE DL_COLON statement
    44              | KW_FOR for_expression KW_IN . for_expression DL_COLON statement
 
-    ID       shift, and go to state 31
-    OP_ADD   shift, and go to state 57
-    OP_SUB   shift, and go to state 58
-    OP_NEG   shift, and go to state 59
-    INTEGER  shift, and go to state 60
-    FLOAT    shift, and go to state 61
+    ID       shift, and go to state 28
+    OP_ADD   shift, and go to state 54
+    OP_SUB   shift, and go to state 55
+    OP_NEG   shift, and go to state 56
+    INTEGER  shift, and go to state 57
+    FLOAT    shift, and go to state 58
 
-    variable             go to state 62
-    procedure_statement  go to state 63
-    for_expression       go to state 115
-    simple_expression    go to state 70
-    term                 go to state 66
-    factor               go to state 67
-    sign                 go to state 68
+    variable             go to state 59
+    procedure_statement  go to state 60
+    for_expression       go to state 114
+    simple_expression    go to state 67
+    term                 go to state 63
+    factor               go to state 64
+    sign                 go to state 65
 
 
-State 102
+State 101
 
    41 while_statement: KW_WHILE expression DL_COLON . statement
    42                | KW_WHILE expression DL_COLON . statement KW_ELSE DL_COLON statement
 
-    ID         shift, and go to state 31
-    KW_BEGIN   shift, and go to state 21
-    KW_IF      shift, and go to state 32
-    KW_NOP     shift, and go to state 33
-    KW_FOR     shift, and go to state 34
-    KW_WHILE   shift, and go to state 35
-    KW_RETURN  shift, and go to state 36
-    KW_PRINT   shift, and go to state 37
+    ID         shift, and go to state 28
+    KW_BEGIN   shift, and go to state 18
+    KW_IF      shift, and go to state 29
+    KW_NOP     shift, and go to state 30
+    KW_FOR     shift, and go to state 31
+    KW_WHILE   shift, and go to state 32
+    KW_RETURN  shift, and go to state 33
+    KW_PRINT   shift, and go to state 34
 
-    compound_statement   go to state 38
-    statement            go to state 116
-    variable             go to state 41
-    print_statement      go to state 42
-    procedure_statement  go to state 43
-    if_statement         go to state 44
-    while_statement      go to state 45
-    for_statement        go to state 46
+    compound_statement   go to state 35
+    statement            go to state 115
+    variable             go to state 38
+    print_statement      go to state 39
+    procedure_statement  go to state 40
+    if_statement         go to state 41
+    while_statement      go to state 42
+    for_statement        go to state 43
 
 
-State 103
+State 102
 
    35 print_statement: KW_PRINT DL_LPAREN expression . DL_RPAREN
 
-    DL_RPAREN  shift, and go to state 117
+    DL_RPAREN  shift, and go to state 116
 
 
-State 104
+State 103
 
    22 statement_list: statement DL_SMCOLON statement_list .
 
     $default  reduce using rule 22 (statement_list)
 
 
-State 105
+State 104
 
    23 statement: variable DL_ASSIGN expression .
 
     $default  reduce using rule 23 (statement)
 
 
-State 106
+State 105
 
    19 parameter_list: identifier_list DL_COLON type .
    20               | identifier_list DL_COLON type . DL_SMCOLON parameter_list
 
-    DL_SMCOLON  shift, and go to state 118
+    DL_SMCOLON  shift, and go to state 117
 
     $default  reduce using rule 19 (parameter_list)
 
 
-State 107
+State 106
 
    15 subprogram_head: KW_FUNC ID arguments DL_COLON standard_type DL_SMCOLON .
 
     $default  reduce using rule 15 (subprogram_head)
 
 
-State 108
+State 107
 
    36 procedure_statement: ID DL_LPAREN actual_parameter_expression DL_RPAREN .
 
     $default  reduce using rule 36 (procedure_statement)
 
 
-State 109
+State 108
 
    49 expression_list: expression DL_COMMA . expression_list
 
-    ID       shift, and go to state 31
-    OP_ADD   shift, and go to state 57
-    OP_SUB   shift, and go to state 58
-    OP_NEG   shift, and go to state 59
-    INTEGER  shift, and go to state 60
-    FLOAT    shift, and go to state 61
+    ID       shift, and go to state 28
+    OP_ADD   shift, and go to state 54
+    OP_SUB   shift, and go to state 55
+    OP_NEG   shift, and go to state 56
+    INTEGER  shift, and go to state 57
+    FLOAT    shift, and go to state 58
 
-    variable             go to state 62
-    procedure_statement  go to state 63
-    expression_list      go to state 119
-    expression           go to state 82
-    simple_expression    go to state 65
-    term                 go to state 66
-    factor               go to state 67
-    sign                 go to state 68
+    variable             go to state 59
+    procedure_statement  go to state 60
+    expression_list      go to state 118
+    expression           go to state 81
+    simple_expression    go to state 62
+    term                 go to state 63
+    factor               go to state 64
+    sign                 go to state 65
 
 
-State 110
+State 109
 
    33 variable: ID DL_LBRACK expression DL_RBRACK .
 
     $default  reduce using rule 33 (variable)
 
 
-State 111
+State 110
 
    37 if_statement: KW_IF expression DL_COLON statement . elif_statement
    38             | KW_IF expression DL_COLON statement . elif_statement KW_ELSE DL_COLON statement
 
     $default  reduce using rule 39 (elif_statement)
 
-    elif_statement  go to state 120
+    elif_statement  go to state 119
 
 
-State 112
+State 111
 
    51 expression: simple_expression relop simple_expression .
 
     $default  reduce using rule 51 (expression)
 
 
-State 113
+State 112
 
    53 simple_expression: term addop simple_expression .
 
     $default  reduce using rule 53 (simple_expression)
 
 
-State 114
+State 113
 
    55 term: factor multop term .
 
     $default  reduce using rule 55 (term)
 
 
-State 115
+State 114
 
    43 for_statement: KW_FOR for_expression KW_IN for_expression . DL_COLON statement KW_ELSE DL_COLON statement
    44              | KW_FOR for_expression KW_IN for_expression . DL_COLON statement
 
-    DL_COLON  shift, and go to state 121
+    DL_COLON  shift, and go to state 120
 
 
-State 116
+State 115
 
    41 while_statement: KW_WHILE expression DL_COLON statement .
    42                | KW_WHILE expression DL_COLON statement . KW_ELSE DL_COLON statement
 
-    KW_ELSE  shift, and go to state 122
+    KW_ELSE  shift, and go to state 121
 
     $default  reduce using rule 41 (while_statement)
 
 
-State 117
+State 116
 
    35 print_statement: KW_PRINT DL_LPAREN expression DL_RPAREN .
 
     $default  reduce using rule 35 (print_statement)
 
 
-State 118
+State 117
 
    20 parameter_list: identifier_list DL_COLON type DL_SMCOLON . parameter_list
 
-    ID  shift, and go to state 16
+    ID  shift, and go to state 20
 
-    identifier_list  go to state 51
-    parameter_list   go to state 123
+    identifier_list  go to state 48
+    parameter_list   go to state 122
 
 
-State 119
+State 118
 
    49 expression_list: expression DL_COMMA expression_list .
 
     $default  reduce using rule 49 (expression_list)
 
 
-State 120
+State 119
 
    37 if_statement: KW_IF expression DL_COLON statement elif_statement .
    38             | KW_IF expression DL_COLON statement elif_statement . KW_ELSE DL_COLON statement
    40 elif_statement: elif_statement . KW_ELIF expression DL_COLON statement
 
-    KW_ELSE  shift, and go to state 124
-    KW_ELIF  shift, and go to state 125
+    KW_ELSE  shift, and go to state 123
+    KW_ELIF  shift, and go to state 124
 
     $default  reduce using rule 37 (if_statement)
 
 
-State 121
+State 120
 
    43 for_statement: KW_FOR for_expression KW_IN for_expression DL_COLON . statement KW_ELSE DL_COLON statement
    44              | KW_FOR for_expression KW_IN for_expression DL_COLON . statement
 
-    ID         shift, and go to state 31
-    KW_BEGIN   shift, and go to state 21
-    KW_IF      shift, and go to state 32
-    KW_NOP     shift, and go to state 33
-    KW_FOR     shift, and go to state 34
-    KW_WHILE   shift, and go to state 35
-    KW_RETURN  shift, and go to state 36
-    KW_PRINT   shift, and go to state 37
+    ID         shift, and go to state 28
+    KW_BEGIN   shift, and go to state 18
+    KW_IF      shift, and go to state 29
+    KW_NOP     shift, and go to state 30
+    KW_FOR     shift, and go to state 31
+    KW_WHILE   shift, and go to state 32
+    KW_RETURN  shift, and go to state 33
+    KW_PRINT   shift, and go to state 34
 
-    compound_statement   go to state 38
-    statement            go to state 126
-    variable             go to state 41
-    print_statement      go to state 42
-    procedure_statement  go to state 43
-    if_statement         go to state 44
-    while_statement      go to state 45
-    for_statement        go to state 46
+    compound_statement   go to state 35
+    statement            go to state 125
+    variable             go to state 38
+    print_statement      go to state 39
+    procedure_statement  go to state 40
+    if_statement         go to state 41
+    while_statement      go to state 42
+    for_statement        go to state 43
 
 
-State 122
+State 121
 
    42 while_statement: KW_WHILE expression DL_COLON statement KW_ELSE . DL_COLON statement
 
-    DL_COLON  shift, and go to state 127
+    DL_COLON  shift, and go to state 126
 
 
-State 123
+State 122
 
    20 parameter_list: identifier_list DL_COLON type DL_SMCOLON parameter_list .
 
     $default  reduce using rule 20 (parameter_list)
 
 
-State 124
+State 123
 
    38 if_statement: KW_IF expression DL_COLON statement elif_statement KW_ELSE . DL_COLON statement
 
-    DL_COLON  shift, and go to state 128
+    DL_COLON  shift, and go to state 127
+
+
+State 124
+
+   40 elif_statement: elif_statement KW_ELIF . expression DL_COLON statement
+
+    ID       shift, and go to state 28
+    OP_ADD   shift, and go to state 54
+    OP_SUB   shift, and go to state 55
+    OP_NEG   shift, and go to state 56
+    INTEGER  shift, and go to state 57
+    FLOAT    shift, and go to state 58
+
+    variable             go to state 59
+    procedure_statement  go to state 60
+    expression           go to state 128
+    simple_expression    go to state 62
+    term                 go to state 63
+    factor               go to state 64
+    sign                 go to state 65
 
 
 State 125
 
-   40 elif_statement: elif_statement KW_ELIF . expression DL_COLON statement
-
-    ID       shift, and go to state 31
-    OP_ADD   shift, and go to state 57
-    OP_SUB   shift, and go to state 58
-    OP_NEG   shift, and go to state 59
-    INTEGER  shift, and go to state 60
-    FLOAT    shift, and go to state 61
-
-    variable             go to state 62
-    procedure_statement  go to state 63
-    expression           go to state 129
-    simple_expression    go to state 65
-    term                 go to state 66
-    factor               go to state 67
-    sign                 go to state 68
-
-
-State 126
-
    43 for_statement: KW_FOR for_expression KW_IN for_expression DL_COLON statement . KW_ELSE DL_COLON statement
    44              | KW_FOR for_expression KW_IN for_expression DL_COLON statement .
 
-    KW_ELSE  shift, and go to state 130
+    KW_ELSE  shift, and go to state 129
 
     $default  reduce using rule 44 (for_statement)
 
 
-State 127
+State 126
 
    42 while_statement: KW_WHILE expression DL_COLON statement KW_ELSE DL_COLON . statement
 
-    ID         shift, and go to state 31
-    KW_BEGIN   shift, and go to state 21
-    KW_IF      shift, and go to state 32
-    KW_NOP     shift, and go to state 33
-    KW_FOR     shift, and go to state 34
-    KW_WHILE   shift, and go to state 35
-    KW_RETURN  shift, and go to state 36
-    KW_PRINT   shift, and go to state 37
+    ID         shift, and go to state 28
+    KW_BEGIN   shift, and go to state 18
+    KW_IF      shift, and go to state 29
+    KW_NOP     shift, and go to state 30
+    KW_FOR     shift, and go to state 31
+    KW_WHILE   shift, and go to state 32
+    KW_RETURN  shift, and go to state 33
+    KW_PRINT   shift, and go to state 34
 
-    compound_statement   go to state 38
+    compound_statement   go to state 35
+    statement            go to state 130
+    variable             go to state 38
+    print_statement      go to state 39
+    procedure_statement  go to state 40
+    if_statement         go to state 41
+    while_statement      go to state 42
+    for_statement        go to state 43
+
+
+State 127
+
+   38 if_statement: KW_IF expression DL_COLON statement elif_statement KW_ELSE DL_COLON . statement
+
+    ID         shift, and go to state 28
+    KW_BEGIN   shift, and go to state 18
+    KW_IF      shift, and go to state 29
+    KW_NOP     shift, and go to state 30
+    KW_FOR     shift, and go to state 31
+    KW_WHILE   shift, and go to state 32
+    KW_RETURN  shift, and go to state 33
+    KW_PRINT   shift, and go to state 34
+
+    compound_statement   go to state 35
     statement            go to state 131
-    variable             go to state 41
-    print_statement      go to state 42
-    procedure_statement  go to state 43
-    if_statement         go to state 44
-    while_statement      go to state 45
-    for_statement        go to state 46
+    variable             go to state 38
+    print_statement      go to state 39
+    procedure_statement  go to state 40
+    if_statement         go to state 41
+    while_statement      go to state 42
+    for_statement        go to state 43
 
 
 State 128
 
-   38 if_statement: KW_IF expression DL_COLON statement elif_statement KW_ELSE DL_COLON . statement
+   40 elif_statement: elif_statement KW_ELIF expression . DL_COLON statement
 
-    ID         shift, and go to state 31
-    KW_BEGIN   shift, and go to state 21
-    KW_IF      shift, and go to state 32
-    KW_NOP     shift, and go to state 33
-    KW_FOR     shift, and go to state 34
-    KW_WHILE   shift, and go to state 35
-    KW_RETURN  shift, and go to state 36
-    KW_PRINT   shift, and go to state 37
-
-    compound_statement   go to state 38
-    statement            go to state 132
-    variable             go to state 41
-    print_statement      go to state 42
-    procedure_statement  go to state 43
-    if_statement         go to state 44
-    while_statement      go to state 45
-    for_statement        go to state 46
+    DL_COLON  shift, and go to state 132
 
 
 State 129
 
-   40 elif_statement: elif_statement KW_ELIF expression . DL_COLON statement
+   43 for_statement: KW_FOR for_expression KW_IN for_expression DL_COLON statement KW_ELSE . DL_COLON statement
 
     DL_COLON  shift, and go to state 133
 
 
 State 130
 
-   43 for_statement: KW_FOR for_expression KW_IN for_expression DL_COLON statement KW_ELSE . DL_COLON statement
-
-    DL_COLON  shift, and go to state 134
-
-
-State 131
-
    42 while_statement: KW_WHILE expression DL_COLON statement KW_ELSE DL_COLON statement .
 
     $default  reduce using rule 42 (while_statement)
 
 
-State 132
+State 131
 
    38 if_statement: KW_IF expression DL_COLON statement elif_statement KW_ELSE DL_COLON statement .
 
     $default  reduce using rule 38 (if_statement)
 
 
-State 133
+State 132
 
    40 elif_statement: elif_statement KW_ELIF expression DL_COLON . statement
 
-    ID         shift, and go to state 31
-    KW_BEGIN   shift, and go to state 21
-    KW_IF      shift, and go to state 32
-    KW_NOP     shift, and go to state 33
-    KW_FOR     shift, and go to state 34
-    KW_WHILE   shift, and go to state 35
-    KW_RETURN  shift, and go to state 36
-    KW_PRINT   shift, and go to state 37
+    ID         shift, and go to state 28
+    KW_BEGIN   shift, and go to state 18
+    KW_IF      shift, and go to state 29
+    KW_NOP     shift, and go to state 30
+    KW_FOR     shift, and go to state 31
+    KW_WHILE   shift, and go to state 32
+    KW_RETURN  shift, and go to state 33
+    KW_PRINT   shift, and go to state 34
 
-    compound_statement   go to state 38
-    statement            go to state 135
-    variable             go to state 41
-    print_statement      go to state 42
-    procedure_statement  go to state 43
-    if_statement         go to state 44
-    while_statement      go to state 45
-    for_statement        go to state 46
+    compound_statement   go to state 35
+    statement            go to state 134
+    variable             go to state 38
+    print_statement      go to state 39
+    procedure_statement  go to state 40
+    if_statement         go to state 41
+    while_statement      go to state 42
+    for_statement        go to state 43
 
 
-State 134
+State 133
 
    43 for_statement: KW_FOR for_expression KW_IN for_expression DL_COLON statement KW_ELSE DL_COLON . statement
 
-    ID         shift, and go to state 31
-    KW_BEGIN   shift, and go to state 21
-    KW_IF      shift, and go to state 32
-    KW_NOP     shift, and go to state 33
-    KW_FOR     shift, and go to state 34
-    KW_WHILE   shift, and go to state 35
-    KW_RETURN  shift, and go to state 36
-    KW_PRINT   shift, and go to state 37
+    ID         shift, and go to state 28
+    KW_BEGIN   shift, and go to state 18
+    KW_IF      shift, and go to state 29
+    KW_NOP     shift, and go to state 30
+    KW_FOR     shift, and go to state 31
+    KW_WHILE   shift, and go to state 32
+    KW_RETURN  shift, and go to state 33
+    KW_PRINT   shift, and go to state 34
 
-    compound_statement   go to state 38
-    statement            go to state 136
-    variable             go to state 41
-    print_statement      go to state 42
-    procedure_statement  go to state 43
-    if_statement         go to state 44
-    while_statement      go to state 45
-    for_statement        go to state 46
+    compound_statement   go to state 35
+    statement            go to state 135
+    variable             go to state 38
+    print_statement      go to state 39
+    procedure_statement  go to state 40
+    if_statement         go to state 41
+    while_statement      go to state 42
+    for_statement        go to state 43
 
 
-State 135
+State 134
 
    40 elif_statement: elif_statement KW_ELIF expression DL_COLON statement .
 
     $default  reduce using rule 40 (elif_statement)
 
 
-State 136
+State 135
 
    43 for_statement: KW_FOR for_expression KW_IN for_expression DL_COLON statement KW_ELSE DL_COLON statement .
 

@@ -2,6 +2,11 @@
 	#include <stdio.h>
 	#include <string.h>
 	#include <stdlib.h>
+	#include "symtab.h"
+
+	#define TRUE 1
+	#define FALSE 0
+
 	extern int yylineno;
 	int yylex();
 	void yyerror (char const *);
@@ -11,6 +16,11 @@
 	struct val_node{
 		char *name;
 		struct val_node *next;
+	};
+
+	struct sym_node{
+		symbol *sym;
+		struct sym_node *next;
 	};
 %}
 %code requires{
@@ -22,6 +32,7 @@
 	char *sval;
 	struct val_node *val_node_ptr;
 	symbol *symbol_ptr;
+	struct sym_node *sym_node_ptr;
 }
 %start program
 
@@ -33,7 +44,8 @@
 %type <ival> type standard_type
 %token <fval> FLOAT
 %type <val_node_ptr> identifier_list
-%type <symbol_ptr>  term factor variable expression simple_expression
+%type <symbol_ptr>  term factor variable expression simple_expression statement print_statement procedure_statement compound_statement if_statement while_statement for_statement
+%type <sym_node_ptr> statement_list
 %precedence DL_COLON
 %precedence KW_ELIF
 %precedence KW_ELSE
@@ -48,15 +60,38 @@ program:
 	;
 
 declarations:	
-	type identifier_list DL_SMCOLON declarations	{
-		//TODO: type implement
+	declarations type identifier_list DL_SMCOLON	{
 		struct val_node *temp_node;
-		union_val null;
-		null.iptr = NULL;
-		int type = 
-		for (temp_node=$2; temp_node; temp_node = temp_node->next){
-			
-			push(temp_node->name, $1, null, var);
+		union_val value;
+		int arr_size = $2 / 2, loop;
+
+		for (temp_node=$3; temp_node; temp_node = temp_node->next){
+			if(sym_stack_is_full()){
+				yyerror("Variable stack is full");
+				break;
+			}
+			if(search(temp_node->name)){
+				yyerror(strcat(temp_node->name, " is already declared."));
+				continue;
+			}
+			if (arr_size > 0){
+				if($2 % 2 == 0){
+					value.iptr = (int *)malloc(sizeof(int) * arr_size);
+					for(loop = 0; loop < arr_size; loop++){
+						value.iptr[loop] = 0;
+					}
+					value.iptr[0] = 0;
+				}else{
+					value.fptr = (float *)malloc(sizeof(float) * arr_size);
+					for(loop = 0; loop < arr_size; loop++){
+						value.fptr[loop] = 0;
+					}
+				}
+			}else{
+				value = (union_val)0;
+			}
+
+			push(temp_node->name, $2, value, var);
 			free(temp_node);
 		}
 	}
@@ -119,12 +154,49 @@ parameter_list:
 	;
 
 statement_list:
-	statement
-	| statement DL_SMCOLON statement_list
+	statement								{
+		struct sym_node *new = (struct sym_node *)malloc(sizeof(struct sym_node));
+		new->sym = $1;
+		new->next = NULL;
+		$$ = new;
+	}
+	| statement DL_SMCOLON statement_list	{
+		struct sym_node *new = (struct sym_node *)malloc(sizeof(struct sym_node));
+		new->sym = $1;
+		new->next = $3;
+		$$ = new;
+	}
 	;
 
 statement:
-	variable DL_ASSIGN expression
+	variable DL_ASSIGN expression	{
+		_type _type1 = _typeof($1), _type2 = _typeof($3);
+
+		if(!_type1 || !_type2)
+			yyerror("value is invalid");
+		else if($1->sym != var || $3->sym != var)
+			yyerror("expression is invalid");
+		else if($1->type != $3->type){
+			if(_type1 == _int_elem && _type2 == _int)
+				*$1->value.iptr = $3->value.ival;
+			else if(_type1 == _float_elem && _type2 == _float)
+				*$1->value.fptr = $3->value.fval;
+			else if(_type1 == _int && _type2 == _int_elem)
+				$1->value.ival = *$3->value.iptr;
+			else if(_type1 == _float && _type2 == _float_elem)
+				$1->value.fval = *$3->value.fptr;
+			else{
+				char *errmsg = "assigning to diffrent type.";
+				yyerror(errmsg);
+			}
+		}else{
+			$1->value = $3->value;
+			if(!$3->name)
+				free($3);
+			if(!$1->name)
+				free($1);
+		}
+	}
 	| print_statement
 	| procedure_statement
 	| compound_statement
@@ -140,17 +212,11 @@ variable:
 		symbol *null = NULL, *temp;
 		temp = search($1);
 		if(!temp){
-			char *errmsg = strcat($1, " is not defined.");
+			char *errmsg = strcat($1, " is undeclared.");
 			yyerror(errmsg);
 			$$ = null;
 		}else if(temp->sym == var){
-			if(temp->type==0 || temp->type==1){
-				$$ = temp;
-			}else{
-				char *errmsg = strcat($1, " is array.");
-				yyerror(errmsg);
-				$$ = null;
-			}
+			$$ = temp;	
 		}else{
 			char *errmsg = strcat($1, " is function.");
 			yyerror(errmsg);
@@ -158,42 +224,66 @@ variable:
 		}
 	}
 	| ID DL_LBRACK expression DL_RBRACK	{
-		symbol *null = NULL, *temp, *ret;
-		temp = search($1);
-		if(!temp){
-			char *errmsg = strcat($1, " is not defined.");
-			yyerror(errmsg);
-			$$ = null;
-		}else if(temp->sym != var){
-			char * errmsg =strcat($1, " is function type.");
-			yyerror(errmsg);
-			$$ = null;
-		}
-		else if($3->type != 0){
-			char *errmsg = "index is not integer.";
-			yyerror(errmsg);
-			$$ = null;
-		}else{
-			int type = temp->type % 2, arr_size = temp->type / 2;
-			if(arr_size < 1){
-				char *errmsg = strcat($1, " is not array.");
+		symbol *null = NULL, *id, *ret;
+		int arr_size, index_value;
+		char *errmsg;
+		id = search($1);
+		_type _typeof_id = _typeof(id), _typeof_index = _typeof($3);
+
+		switch(_typeof_id){
+			case _NULL:
+				errmsg = strcat($1, " is undeclared.");
 				yyerror(errmsg);
 				$$ = null;
-			}else if($3->value.ival < 0 || $3->value.ival >= arr_size){
-				char *errmsg = "Array index out of bounds.";
-				yyerror(errmsg);
+				break;
+
+			case _int_arr:
+			case _float_arr:
+				switch(_typeof_index){
+					case _NULL:
+						yyerror("Invalid value.");
+						break;
+
+					case _int:
+					case _int_elem:
+						arr_size = id->type / 2;
+						index_value = _typeof_index == _int ? $3->value.ival : *$3->value.iptr;
+							
+						if(index_value < 0 || index_value >= arr_size){
+							yyerror("Array index out of bounds.");
+							$$ = null;
+						}else{
+							ret = (symbol *)malloc(sizeof(symbol));
+							ret->name = (char *)NULL;	//flag for deallocate
+							ret->type = id->type;
+							if(_typeof_id == _int_arr)
+								if(_typeof_index == _int)
+									ret->value.iptr = &id->value.iptr[$3->value.ival];
+								else{ // if(_typeof_index == _int_elem)
+									ret->value.iptr = &id->value.iptr[*$3->value.iptr];
+								}
+							else // if(_typeof_id == _float_arr)
+								if(_typeof_index == _int)
+									ret->value.fptr = &id->value.fptr[$3->value.ival];
+								else{ // if(_typeof_index == _int_elem)
+									ret->value.fptr = &id->value.fptr[*$3->value.iptr];
+								}
+							ret->sym = var;
+							$$ = ret;
+
+							if(!$3->name)				//If index is temporary variable 
+								free($3);
+						}
+						break;
+
+					default:
+						yyerror("Index is not integer.");
+						$$ = null;
+				}
+				break;
+			default:
+				yyerror("ID is not array.");
 				$$ = null;
-			}else{
-				ret = (symbol *)malloc(sizeof(symbol));
-				ret->name = (char *)NULL;	//flag for deallocate;
-				ret->type = type;
-				if(type==0)
-					ret->value.iptr = &temp->value.iptr[$<ival>3];
-				else
-					ret->value.fptr = &temp->value.fptr[$<ival>3];
-				ret->sym = var;
-				$$ = ret;
-			}
 		}
 	}
 	;
@@ -201,35 +291,14 @@ variable:
 print_statement:
 	KW_PRINT									{ print_stack(); }
 	| KW_PRINT DL_LPAREN expression DL_RPAREN	{
-		if(!$3){
-			yyerror("unvalid expresson.");
+		if(!$3)
 			break;
-		}
-		switch($3->sym){
-			case var:
-				if($3->type < 0){
-					char *print_str;
-					print_str = $3->value.ival == 0 ? "false" : "true";
-					printf("%s\n", print_str);
-				}else if($3->type > 1){
-					if($3->type % 2 == 0)
-						printf("%d\n", *$3->value.iptr);
-					else
-						printf("%f\n", *$3->value.fptr);
-				}else{
-					if($3->type % 2 == 0)
-						printf("%d\n", $3->value.ival);
-					else
-						printf("%f\n", $3->value.fval);
-				}
-				if(!$3->name)
-					free($3);
-				break;
-			default:
-				printf("function\n");
-				break;
-		}
 
+		print_sym($3);
+		printf("\n");
+
+		if(!$3->name)
+			free($3);
 	} 
 	;
 
@@ -272,18 +341,26 @@ expression_list:
 	;
 
 expression:
-	simple_expression
+	simple_expression		{
+		$$ = $1;
+	}
 	| simple_expression relop simple_expression
 	;
 
 simple_expression:
-	term
+	term					{
+		$$ = $1;
+	}
 	| term addop simple_expression
 	;
 
 term:
-	factor
-	| factor multop term
+	factor					{
+		$$ = $1;
+	}
+	| factor multop term	{
+		_type _type1 = _typeof($1), _type2 = _typeof($3); 
+	}	
 	;
 
 factor:
@@ -306,38 +383,67 @@ factor:
 	| variable				{ $$ = $1; }
 	| procedure_statement	{}
 	| OP_NEG factor			{
-		symbol *ret = $2 ? NULL : (symbol *)malloc(sizeof(symbol));
-		$$ = ret;
+		char *errmsg;
+		_type _typeof_factor = _typeof($2);
+
+		switch(_typeof_factor){
+			case _NULL:
+				yyerror("Invalid value.");
+				break;
+			case _true:
+			case _false:
+				$2->type = !$2->type ? TRUE : FALSE;
+				break;
+			default:
+				errmsg = strcat(_typeof_str($2), "' is not boolean.");
+				errmsg = strcat("type '", errmsg);
+				yyerror(errmsg);
+		}
 	}
 	| sign factor			{
 		symbol *ret, *null = NULL;
-		if(!$2){
-			char * errmsg = "variable is not defined.";
-			yyerror(errmsg);
-			$$ = null;
-			break;
-		}else if($2->sym != var){
-			char *errmsg = "invalid type 'function' to unary expression.";
-			yyerror(errmsg);
-			$$ = null;
-			break;
-		}else if($2->type > 1){
-			char *errmsg = " is invalid type 'array' to unary expression.";
+		_type _typeof_factor = _typeof($2);
+		char *errmsg;
+		int sign = *$1 == '+' ? 1 : -1;
+		switch(_typeof_factor){
+			case _func:
+			case _proc:
+			case _true:
+			case _false:
+			case _int_arr:
+			case _float_arr:
+				errmsg = strcat("Invalid type '", _typeof_str($2));
+				errmsg = strcat(errmsg, "' to unary expression.");
+				yyerror(errmsg);
+				$$ = null;
+				break;
+			case _int:
+			case _float:
+			case _int_elem:
+			case _float_elem:
+				ret = (symbol *)malloc(sizeof(symbol));
+				ret->name = (char *)NULL;	//flag for deallocation.
+				ret->type = $2->type;
+				if(_typeof_factor == _int)
+					ret->value.ival = $2->value.ival * sign;
+				else if(_typeof_factor == _float)
+					ret->value.fval = $2->value.fval * sign;
+				else if(_typeof_factor == _int_elem)
+					ret->value.fval = *$2->value.iptr * sign;
+				else // if(_typeof_factor == _float_elem
+					ret->value.fval = *$2->value.fptr * sign;
+				ret->sym = var;
+
+				$$ = ret;
+				break;
+			default:
+				yyerror("Invalid value.");
+				$$ = null;
 		}
-		ret = (symbol *)malloc(sizeof(symbol));
-		ret->name = (char *)NULL;	//flag for deallocation.
-		ret->type = $2->type;
-		int sign = *$1 == '-' ? -1 : 1;
-		if($2->type == 0)
-			ret->value.ival = $2->value.ival * sign;
-		else if($2->type == 1)
-			ret->value.fval = $2->value.fval * (float)sign;
-		ret->sym = var;
 
-		$$ = ret;
-
-		if(!$2->name)
-			free($2);
+		if($2)
+			if(!$2->name)
+				free($2);					//free temporary variable
 	}
 	;
 
