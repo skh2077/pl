@@ -173,7 +173,7 @@ Nonterminals, with rules where they appear
     subprogram_declarations (46)
         on left: 5 6
         on right: 2 5
-    compound_statement (47)
+    compound_statement <symbol_ptr> (47)
         on left: 7
         on right: 2 14 26
     type <ival> (48)
@@ -197,31 +197,31 @@ Nonterminals, with rules where they appear
     parameter_list (54)
         on left: 19 20
         on right: 17 20
-    statement_list (55)
+    statement_list <sym_node_ptr> (55)
         on left: 21 22
         on right: 7 22
-    statement (56)
+    statement <symbol_ptr> (56)
         on left: 23 24 25 26 27 28 29 30 31
         on right: 21 22 37 38 40 41 42 43 44
     variable <symbol_ptr> (57)
         on left: 32 33
         on right: 23 58
-    print_statement (58)
+    print_statement <symbol_ptr> (58)
         on left: 34 35
         on right: 24
-    procedure_statement (59)
+    procedure_statement <symbol_ptr> (59)
         on left: 36
         on right: 25 59
-    if_statement (60)
+    if_statement <symbol_ptr> (60)
         on left: 37 38
         on right: 27
     elif_statement (61)
         on left: 39 40
         on right: 37 38 40
-    while_statement (62)
+    while_statement <symbol_ptr> (62)
         on left: 41 42
         on right: 28
-    for_statement (63)
+    for_statement <symbol_ptr> (63)
         on left: 43 44
         on right: 29
     for_expression (64)
